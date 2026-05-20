@@ -38,6 +38,10 @@ describe('Blockly parser', () => {
     ])
   })
 
+  it('parses binarySearch starter block', () => {
+    expect(parseStarter('binarySearch')).toEqual([{ type: 'binarySearch' }])
+  })
+
   it('reveals beginner-friendly Python', () => {
     const python = instructionsToPython(parseStarter('binarySearch'))
 

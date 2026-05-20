@@ -51,6 +51,22 @@ describe('executeProgram', () => {
     expect(frames.some((frame) => frame.event.pointer === 'mid')).toBe(true)
   })
 
+  it('binary search returns -1 when the target is missing', () => {
+    const frames = executeProgram([{ type: 'binarySearch' }], [1, 3, 5, 7, 9], 4)
+    const finalState = frames.at(-1)?.state
+
+    expect(finalState?.resultIndex).toBe(-1)
+    expect(finalState?.found).toBe(false)
+  })
+
+  it('binary search finds the target at the first element', () => {
+    const frames = executeProgram([{ type: 'binarySearch' }], [1, 3, 5, 7, 9], 1)
+    const finalState = frames.at(-1)?.state
+
+    expect(finalState?.resultIndex).toBe(0)
+    expect(finalState?.operationCount).toBeGreaterThan(0)
+  })
+
   it('executes learner-built linear search blocks', () => {
     const program: ProgramInstruction[] = [
       {
