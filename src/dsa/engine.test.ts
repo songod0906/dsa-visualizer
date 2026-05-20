@@ -67,6 +67,23 @@ describe('executeProgram', () => {
     expect(finalState?.operationCount).toBeGreaterThan(0)
   })
 
+  it('binary search on empty array returns -1, found false, operationCount 0', () => {
+    const frames = executeProgram([{ type: 'binarySearch' }], [], 10)
+    const finalState = frames.at(-1)?.state
+
+    expect(finalState?.resultIndex).toBe(-1)
+    expect(finalState?.found).toBe(false)
+    expect(finalState?.operationCount).toBe(0)
+  })
+
+  it('binary search finds target at last element with at least one comparison', () => {
+    const frames = executeProgram([{ type: 'binarySearch' }], [2, 4, 6, 8, 10], 10)
+    const finalState = frames.at(-1)?.state
+
+    expect(finalState?.resultIndex).toBe(4)
+    expect(finalState?.operationCount).toBeGreaterThan(0)
+  })
+
   it('executes learner-built linear search blocks', () => {
     const program: ProgramInstruction[] = [
       {
