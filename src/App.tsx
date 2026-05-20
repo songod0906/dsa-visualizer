@@ -11,7 +11,9 @@ import {
   workspaceToInstructions,
 } from './dsa/blockly'
 import { executeProgram, createInitialState } from './dsa/engine'
+import { getLearningSupport, isLinearSearchProgram } from './dsa/learningSupport'
 import { levels } from './dsa/levels'
+import type { LearningSupport } from './dsa/learningSupport'
 import type { ExecutionFrame, LearningMode, Level, ProgramInstruction, SandboxConfig } from './dsa/types'
 
 const sandboxScenarios = [
@@ -54,13 +56,16 @@ const allBlocks = [
 ]
 
 const linearSearchTeachingIntro =
-  'Linear search checks the array from left to right. It is correct for any array order because it compares each visited value directly with the target.'
+  'Linear search checks values left to right until it finds the target or reaches the end.'
 
 const explorationIntro =
-  'Use Run, Pause, Step, and Reset to inspect the trace. The visualization, code highlight, and explanation follow the selected frame.'
+  'Step through the visualization and trace.'
 
 const explorationFallbackIntro =
-  'Use Run, Pause, Step, and Reset to inspect the visualization and trace for this level.'
+  'Code highlighting is unavailable for this level.'
+
+const explorationNeutralDetail =
+  'The visualization and trace are still available for this algorithm.'
 
 type CodeLine = {
   text: string
@@ -71,13 +76,6 @@ type TeachingStep = {
   activeLines: number[]
   summary: string
   detail: string
-}
-
-type LearningSupport = {
-  teaching: 'supported' | 'partial' | 'unsupported'
-  codeHighlight: 'supported' | 'unsupported'
-  explanation: 'supported' | 'fallback' | 'unsupported'
-  reason: string
 }
 
 const randomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
@@ -99,38 +97,6 @@ const toCodeLines = (code: string): CodeLine[] =>
     text,
     number: index + 1,
   }))
-
-function isLinearSearchProgram(instructions: ProgramInstruction[]) {
-  return instructions.length === 1 && instructions[0]?.type === 'linearSearch'
-}
-
-function getLearningSupport(level: Level | null, instructions: ProgramInstruction[]): LearningSupport {
-  if (isLinearSearchProgram(instructions)) {
-    return {
-      teaching: 'supported',
-      codeHighlight: 'supported',
-      explanation: 'supported',
-      reason: 'Full Teaching Mode is available for the Linear Search recipe.',
-    }
-  }
-
-  if (level?.id === 4) {
-    return {
-      teaching: 'partial',
-      codeHighlight: 'unsupported',
-      explanation: 'fallback',
-      reason:
-        'This level builds linear search from smaller blocks, but line-by-line teaching is only wired for the Linear Search recipe.',
-    }
-  }
-
-  return {
-    teaching: 'unsupported',
-    codeHighlight: 'unsupported',
-    explanation: 'unsupported',
-    reason: 'Line-level teaching metadata has not been added for this level or recipe.',
-  }
-}
 
 function getTeachingStep(
   frame: ExecutionFrame | undefined,
@@ -505,7 +471,6 @@ function App() {
           <ArrayBoard level={mode === 'puzzle' ? activeLevel : null} state={currentState} event={currentFrame?.event} />
           <ModePanel
             learningMode={learningMode}
-            isLinearSearch={isLinearSearchProgram(instructions)}
             teachingStep={teachingStep}
             support={learningSupport}
           />
@@ -620,53 +585,49 @@ function SandboxControls({
 
 function ModePanel({
   learningMode,
-  isLinearSearch,
   teachingStep,
   support,
 }: {
   learningMode: LearningMode
-  isLinearSearch: boolean
   teachingStep: TeachingStep
   support: LearningSupport
 }) {
-  const teachingUnavailable = learningMode === 'teaching' && support.teaching !== 'supported'
-  const explorationFallback = learningMode === 'exploration' && support.codeHighlight !== 'supported'
-  const summary = teachingUnavailable
-    ? support.teaching === 'partial'
-      ? 'Teaching Mode is partially available.'
-      : 'Teaching Mode is not fully available for this level yet.'
-    : teachingStep.summary
-  const detail = teachingUnavailable
-    ? `${support.reason} Use Exploration Mode for now.`
-    : explorationFallback
-      ? 'This program can still be run and stepped visually. Code-line highlighting and teaching explanations are not available for this level or recipe yet.'
-      : teachingStep.detail
+  if (learningMode === 'teaching') {
+    const message =
+      support.teaching === 'supported'
+        ? null
+        : support.teaching === 'partial'
+          ? 'Line-by-line teaching is not wired for this block-built version yet.'
+          : 'Teaching is not ready for this level yet.'
+
+    return (
+      <section className="mode-panel" aria-label="Teaching mode details">
+        <div>
+          <strong>Teaching</strong>
+          <span>{message ?? linearSearchTeachingIntro}</span>
+        </div>
+        {!message && (
+          <div className="step-explanation">
+            <span>{teachingStep.summary}</span>
+            <p>{teachingStep.detail}</p>
+          </div>
+        )}
+      </section>
+    )
+  }
 
   return (
-    <section
-      className={`mode-panel ${teachingUnavailable ? 'unavailable' : ''}`}
-      aria-label={`${learningMode} mode details`}
-    >
+    <section className="mode-panel" aria-label="Exploration mode details">
       <div>
-        <strong>{learningMode === 'teaching' ? 'Teaching Mode' : 'Exploration Mode'}</strong>
-        <span>
-          {learningMode === 'teaching' && support.teaching === 'supported' && isLinearSearch
-            ? linearSearchTeachingIntro
-            : learningMode === 'teaching'
-              ? support.reason
-              : support.codeHighlight === 'supported'
-                ? explorationIntro
-                : explorationFallbackIntro}
-        </span>
-        <div className="support-grid" aria-label="Teaching support status">
-          <span>Teaching: {support.teaching}</span>
-          <span>Code: {support.codeHighlight}</span>
-          <span>Explanation: {support.explanation}</span>
-        </div>
+        <strong>Exploration</strong>
+        <span>{explorationIntro}</span>
+        {support.codeHighlight !== 'supported' && (
+          <span>{explorationFallbackIntro}</span>
+        )}
       </div>
       <div className="step-explanation">
-        <span>{summary}</span>
-        <p>{detail}</p>
+        <span>{teachingStep.summary}</span>
+        <p>{support.codeHighlight === 'supported' ? teachingStep.detail : explorationNeutralDetail}</p>
       </div>
     </section>
   )

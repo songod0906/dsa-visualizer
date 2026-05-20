@@ -454,29 +454,6 @@ button.active,
   font-weight: 800;
 }
 
-.support-grid {
-  display: flex !important;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 2px;
-}
-
-.support-grid span {
-  background: #eef4ff;
-  border: 1px solid #b8ccff;
-  border-radius: 999px;
-  color: #24478f;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 1;
-  padding: 5px 7px;
-}
-
-.mode-panel.unavailable .support-grid span {
-  background: #fff4d6;
-  border-color: #efd18c;
-  color: #7a4f0c;
-}
 
 .controls {
   background: #050607;
