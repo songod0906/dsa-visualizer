@@ -1,0 +1,135 @@
+{
+  "project": "dsa-visual-blockly-learning-app",
+  "rules": {
+    "wip_limit": 1,
+    "allowed_states": ["not_started", "active", "blocked", "passing"],
+    "passing_requires": ["verification_command_passed", "evidence_recorded"]
+  },
+  "features": [
+    {
+      "id": "F001",
+      "priority": 1,
+      "area": "linear-search-teaching",
+      "title": "Make single-block Linear Search Teaching excellent",
+      "state": "not_started",
+      "behavior": "Linear Search Teaching should keep runtime state, visualization, generated code, highlighting, and explanation synchronized across run, step, reset, and level switches.",
+      "scope": {
+        "allowed_files": [
+          "src/dsa/engine.ts",
+          "src/dsa/learningSupport.ts",
+          "src/dsa/engine.test.ts",
+          "src/dsa/learningSupport.test.ts",
+          "src/App.tsx",
+          "src/App.css"
+        ],
+        "forbidden_files": [
+          "package.json",
+          "package-lock.json"
+        ]
+      },
+      "availability": {
+        "full_support": ["single-block Linear Search Teaching"],
+        "partial_support": ["Level 4 block-built Linear Search"],
+        "unsupported": ["Binary Search Teaching", "non-search algorithms", "LeetCode import"]
+      },
+      "verification": {
+        "commands": [
+          "npm test",
+          "npm run build",
+          "npm run lint"
+        ],
+        "manual_checks": [
+          "Run Linear Search Teaching with target found",
+          "Step Linear Search Teaching with target missing",
+          "Reset and confirm runtime state clears",
+          "Switch levels and confirm no stale explanation or highlight remains"
+        ]
+      },
+      "evidence": []
+    },
+    {
+      "id": "F002",
+      "priority": 2,
+      "area": "level-4-block-linear-search",
+      "title": "Support Level 4 block-built Linear Search truthfully",
+      "state": "not_started",
+      "behavior": "Level 4 block-built Linear Search should either fully execute the supported block-built instruction path or clearly show which parts are partial without fake highlighting or fake explanations.",
+      "scope": {
+        "allowed_files": [
+          "src/dsa/blockly.ts",
+          "src/dsa/blockly.test.ts",
+          "src/dsa/engine.ts",
+          "src/dsa/engine.test.ts",
+          "src/dsa/learningSupport.ts",
+          "src/dsa/learningSupport.test.ts",
+          "src/App.tsx",
+          "src/App.css"
+        ],
+        "forbidden_files": [
+          "package.json",
+          "package-lock.json"
+        ]
+      },
+      "availability": {
+        "full_support": ["supported Level 4 Linear Search blocks"],
+        "partial_support": ["unsupported Level 4 block combinations"],
+        "unsupported": ["arbitrary user code execution", "non-search algorithms"]
+      },
+      "verification": {
+        "commands": [
+          "npm test",
+          "npm run build",
+          "npm run lint"
+        ],
+        "manual_checks": [
+          "Build a valid Level 4 Linear Search block flow",
+          "Run and step the block-built flow",
+          "Confirm unsupported block combinations are stated as partial or unsupported",
+          "Confirm Puzzle and Sandbox navigation still works"
+        ]
+      },
+      "evidence": []
+    },
+    {
+      "id": "F003",
+      "priority": 3,
+      "area": "binary-search-learning-flow",
+      "title": "Clarify Binary Search support and feedback",
+      "state": "not_started",
+      "behavior": "Binary Search should avoid fake Teaching support and, when implemented, explain the current comparison, decision, and remaining search interval without stale text from previous runs.",
+      "scope": {
+        "allowed_files": [
+          "src/dsa/engine.ts",
+          "src/dsa/learningSupport.ts",
+          "src/dsa/engine.test.ts",
+          "src/dsa/learningSupport.test.ts",
+          "src/App.tsx",
+          "src/App.css"
+        ],
+        "forbidden_files": [
+          "package.json",
+          "package-lock.json"
+        ]
+      },
+      "availability": {
+        "full_support": [],
+        "partial_support": ["Binary Search Exploration or existing runnable support"],
+        "unsupported": ["Binary Search Teaching until explicitly implemented", "non-search algorithms"]
+      },
+      "verification": {
+        "commands": [
+          "npm test",
+          "npm run build",
+          "npm run lint"
+        ],
+        "manual_checks": [
+          "Run Binary Search level",
+          "Step forward after success",
+          "Restart level",
+          "Switch to another algorithm and confirm no stale binary-search explanation appears"
+        ]
+      },
+      "evidence": []
+    }
+  ]
+}
