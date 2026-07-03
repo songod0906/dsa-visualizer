@@ -437,18 +437,24 @@ function App() {
         )}
       </section>
 
-      <section className="workspace-grid">
-        <aside className="block-panel">
-          <div className="panel-heading">
-            <span>Blocks</span>
+      <section className="workspace-grid lab-workspace">
+        <aside className="block-panel build-zone">
+          <div className="panel-heading zone-heading">
+            <div>
+              <span className="zone-kicker">Build</span>
+              <span>Logic blocks</span>
+            </div>
             <button onClick={() => loadStarter(mode === 'puzzle' ? activeLevel.starterBlocks[0] : 'linearSearch')}>Starter</button>
           </div>
           <div ref={blocklyHost} className="blockly-host" />
         </aside>
 
-        <section className="visual-panel">
-          <div className="panel-heading">
-            <span>Visualization</span>
+        <section className="visual-panel run-zone">
+          <div className="panel-heading zone-heading run-heading">
+            <div>
+              <span className="zone-kicker">Run</span>
+              <span>Runtime stage</span>
+            </div>
             <div className="memory-badges">
               <div className="learning-toggle" aria-label="Choose teaching or exploration mode">
                 <button
@@ -468,12 +474,14 @@ function App() {
               <span className="target-pill">target = {activeTarget}</span>
             </div>
           </div>
-          <ArrayBoard level={mode === 'puzzle' ? activeLevel : null} state={currentState} event={currentFrame?.event} />
-          <ModePanel
-            learningMode={learningMode}
-            teachingStep={teachingStep}
-            support={learningSupport}
-          />
+          <div className="run-stage">
+            <ArrayBoard level={mode === 'puzzle' ? activeLevel : null} state={currentState} event={currentFrame?.event} />
+            <ModePanel
+              learningMode={learningMode}
+              teachingStep={teachingStep}
+              support={learningSupport}
+            />
+          </div>
           <div className="controls" aria-label="Execution controls">
             <button onClick={runProgram}><Play size={16} /> Run</button>
             <button onClick={() => setRunning(false)}><Pause size={16} /> Pause</button>
@@ -485,19 +493,28 @@ function App() {
             </label>
             <button className="primary-action" onClick={checkAnswer}><Check size={16} /> Check</button>
           </div>
-          <div className="feedback-row">
-            <p>{feedback}</p>
-            <button onClick={() => setHintIndex((index) => index + 1)}>Hint</button>
+          <div className="run-footer">
+            <div className="feedback-row">
+              <p>{feedback}</p>
+              <button onClick={() => setHintIndex((index) => index + 1)}>Hint</button>
+            </div>
+            <p className="hint-line">{activeHint}</p>
           </div>
-          <p className="hint-line">{activeHint}</p>
         </section>
 
-        <aside className="code-panel">
-          <div className="panel-heading">
-            <span>Python</span>
+        <aside className="code-panel inspect-zone">
+          <div className="panel-heading zone-heading">
+            <div>
+              <span className="zone-kicker">Inspect</span>
+              <span>Code</span>
+            </div>
             <span>{currentState.operationCount} comparisons</span>
           </div>
           <CodePanel lines={codeLines} activeLines={activeCodeLines} />
+          <div className="trace-heading">
+            <span>Trace</span>
+            <span>{frames.length} steps</span>
+          </div>
           <div className="trace">
             {frames.map((frame, index) => (
               <button
