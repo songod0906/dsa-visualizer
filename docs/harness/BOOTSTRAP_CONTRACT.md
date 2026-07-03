@@ -1,7 +1,7 @@
 # Bootstrap Contract
 
 ## Repo
-Root: `/Users/sonhoangnguyen/Documents/New project 2`
+Root: `/Users/sonhoangnguyen/Documents/DSA website`
 
 ## Tech Stack
 - React 19
@@ -52,10 +52,11 @@ Do not edit unless required:
 Read in this order:
 1. `AGENTS.md`
 2. `docs/PRODUCT_VISION.md`
-3. `docs/ARCHITECTURE.md`
-4. `docs/QA_GATE.md`
-5. `docs/harness/FEATURE_LIST.json`
-6. `docs/harness/PROGRESS.md`
+3. `docs/ROADMAP.md`
+4. `docs/ARCHITECTURE.md`
+5. `docs/QA_GATE.md`
+6. `docs/harness/FEATURE_LIST.json`
+7. `docs/harness/PROGRESS.md`
 
 ## Scope Rules
 - No package installs unless explicitly approved.

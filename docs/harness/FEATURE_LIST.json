@@ -1,5 +1,6 @@
 {
   "project": "dsa-visual-blockly-learning-app",
+  "roadmap": "docs/ROADMAP.md",
   "rules": {
     "wip_limit": 1,
     "allowed_states": ["not_started", "active", "blocked", "passing"],
@@ -7,8 +8,48 @@
   },
   "features": [
     {
-      "id": "F001",
+      "id": "F000",
+      "milestone": "M0",
       "priority": 1,
+      "area": "design-system-cleanup",
+      "title": "Reset the runtime-state surface to flat/functional",
+      "state": "not_started",
+      "behavior": "The array board, pointers, and status badges should carry only learning-meaningful color and emphasis. Remove gradients, drop-shadows, and decorative pill badges from the runtime stage that do not signal an operation, comparison, or result, per docs/DESIGN_SYSTEM.md.",
+      "scope": {
+        "allowed_files": [
+          "src/App.css",
+          "src/App.tsx"
+        ],
+        "forbidden_files": [
+          "package.json",
+          "package-lock.json",
+          "src/dsa/engine.ts",
+          "src/dsa/blockly.ts"
+        ]
+      },
+      "availability": {
+        "full_support": [],
+        "partial_support": [],
+        "unsupported": []
+      },
+      "verification": {
+        "commands": [
+          "npm test",
+          "npm run build",
+          "npm run lint"
+        ],
+        "manual_checks": [
+          "Screenshot the runtime stage and check for gradients, drop-shadows, or decorative badges",
+          "Confirm block palette styling is untouched (expressive style is intentional there)",
+          "Confirm no layout regression in Puzzle or Sandbox mode"
+        ]
+      },
+      "evidence": []
+    },
+    {
+      "id": "F001",
+      "milestone": "M1",
+      "priority": 2,
       "area": "linear-search-teaching",
       "title": "Make single-block Linear Search Teaching excellent",
       "state": "not_started",
@@ -49,11 +90,12 @@
     },
     {
       "id": "F002",
-      "priority": 2,
-      "area": "level-4-block-linear-search",
-      "title": "Support Level 4 block-built Linear Search truthfully",
+      "milestone": "M2",
+      "priority": 3,
+      "area": "teaching-engine-generalization",
+      "title": "Generalize the teaching engine so Level 4 rides shared logic, not a one-off",
       "state": "not_started",
-      "behavior": "Level 4 block-built Linear Search should either fully execute the supported block-built instruction path or clearly show which parts are partial without fake highlighting or fake explanations.",
+      "behavior": "Extract the narration/highlight logic that currently only understands the single canned Linear Search instruction sequence into something that walks any valid instruction-model program (loop, compare, if, return) generically. Level 4 block-built Linear Search should work through this shared engine, not bespoke wiring, and the single-block flow from F001 must keep working through the same code path with no new special case.",
       "scope": {
         "allowed_files": [
           "src/dsa/blockly.ts",
@@ -85,6 +127,7 @@
           "Build a valid Level 4 Linear Search block flow",
           "Run and step the block-built flow",
           "Confirm unsupported block combinations are stated as partial or unsupported",
+          "Confirm the single-block Linear Search Teaching flow from F001 still passes with no duplicated logic",
           "Confirm Puzzle and Sandbox navigation still works"
         ]
       },
@@ -92,11 +135,12 @@
     },
     {
       "id": "F003",
-      "priority": 3,
+      "milestone": "M3",
+      "priority": 4,
       "area": "binary-search-learning-flow",
       "title": "Clarify Binary Search support and feedback",
       "state": "not_started",
-      "behavior": "Binary Search should avoid fake Teaching support and, when implemented, explain the current comparison, decision, and remaining search interval without stale text from previous runs.",
+      "behavior": "Binary Search should avoid fake Teaching support and, when implemented, explain the current comparison, decision, and remaining search interval without stale text from previous runs. This should be implemented on top of the F002 shared engine, not a second bespoke engine.",
       "scope": {
         "allowed_files": [
           "src/dsa/engine.ts",
@@ -127,6 +171,46 @@
           "Step forward after success",
           "Restart level",
           "Switch to another algorithm and confirm no stale binary-search explanation appears"
+        ]
+      },
+      "evidence": [],
+      "depends_on": ["F002"]
+    },
+    {
+      "id": "F004",
+      "milestone": "M4",
+      "priority": 5,
+      "area": "trace-scrubbing",
+      "title": "Add VCR-style trace transport (step-back, jump-to-start, jump-to-end)",
+      "state": "not_started",
+      "behavior": "The app already stores the full frame trace and renders clickable past steps. Add transport controls so a learner can move to any prior step without re-running the program, matching VisuAlgo-style scrubbing.",
+      "scope": {
+        "allowed_files": [
+          "src/App.tsx",
+          "src/App.css",
+          "src/dsa/engine.ts",
+          "src/dsa/engine.test.ts"
+        ],
+        "forbidden_files": [
+          "package.json",
+          "package-lock.json"
+        ]
+      },
+      "availability": {
+        "full_support": [],
+        "partial_support": [],
+        "unsupported": []
+      },
+      "verification": {
+        "commands": [
+          "npm test",
+          "npm run build",
+          "npm run lint"
+        ],
+        "manual_checks": [
+          "Jump to start, then step forward and confirm state matches trace",
+          "Jump to end, then step back and confirm state matches trace",
+          "Confirm existing Run/Pause/Step/Reset behavior is unchanged"
         ]
       },
       "evidence": []

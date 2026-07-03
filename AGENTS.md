@@ -6,12 +6,13 @@ DSA Blocks Lab is a beginner-focused DSA learning app combining algorithm visual
 ## Required Startup Routine
 Before editing code:
 1. Read [docs/harness/BOOTSTRAP_CONTRACT.md](docs/harness/BOOTSTRAP_CONTRACT.md).
-2. Read [docs/harness/PROGRESS.md](docs/harness/PROGRESS.md).
-3. Read [docs/harness/FEATURE_LIST.json](docs/harness/FEATURE_LIST.json).
-4. Read [docs/QA_GATE.md](docs/QA_GATE.md).
-5. Run `bash scripts/harness/status.sh`.
-6. Identify the single active task.
-7. Do not edit until scope is clear.
+2. Read [docs/ROADMAP.md](docs/ROADMAP.md) to see the current milestone sequence.
+3. Read [docs/harness/PROGRESS.md](docs/harness/PROGRESS.md).
+4. Read [docs/harness/FEATURE_LIST.json](docs/harness/FEATURE_LIST.json).
+5. Read [docs/QA_GATE.md](docs/QA_GATE.md).
+6. Run `bash scripts/harness/status.sh`.
+7. Identify the single active task, and confirm it maps to the next open milestone in the roadmap.
+8. Do not edit until scope is clear.
 
 ## Work Rules
 - WIP = 1. Work on one task only.
