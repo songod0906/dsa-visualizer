@@ -56,7 +56,7 @@
       "priority": 2,
       "area": "linear-search-teaching",
       "title": "Make single-block Linear Search Teaching excellent",
-      "state": "not_started",
+      "state": "passing",
       "behavior": "Linear Search Teaching should keep runtime state, visualization, generated code, highlighting, and explanation synchronized across run, step, reset, and level switches.",
       "scope": {
         "allowed_files": [
@@ -90,7 +90,12 @@
           "Switch levels and confirm no stale explanation or highlight remains"
         ]
       },
-      "evidence": []
+      "evidence": [
+        "2026-07-04: npm test 32/32 pass (was 21; +11 sync-contract tests), build OK, lint clean, clean-state OK.",
+        "2026-07-04: Extracted getTeachingStep + TeachingStep type from App.tsx into src/dsa/learningSupport.ts so the sync logic is unit-testable and out of the high-coupling App.tsx. Behavior unchanged (pure move). App.tsx now imports it.",
+        "2026-07-04: New tests in learningSupport.test.ts run the REAL engine, feed each frame through getLearningSupport + getTeachingStep, and assert: every supported step highlights a real code line (never empty); teaching summary === trace event message; compare->line3, current-move->line2; found run ends on line 4 (return i), missing on line 5 (return -1); empty array never fakes a loop step; unsupported programs get no highlight/explanation. A guard test asserts the emitted Python still has the 5-line shape the mapping targets, so a future blockly.ts line shift breaks the test.",
+        "2026-07-04: Fixed stale-program window on level/mode switch. chooseLevel/chooseMode now setInstructions([]) so the new level/mode is never painted against the previous program's blocks (which could briefly show FAKE 'supported' teaching on a level that is not supported). Browser QA: level 5->1->5 round trip settles to correct supported teaching with no stuck-empty state; Level 5 step-through shows line 2/3 highlight synced with cell + explanation + trace."
+      ]
     },
     {
       "id": "F002",

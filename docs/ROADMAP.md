@@ -35,8 +35,8 @@ A milestone is not "done" because code merged. It's done when:
 | | Milestone | Status |
 |---|---|---|
 | Done | M0 — Design reset | done (2026-07-04) |
-| Now | M1 — Harden Linear Search Teaching | not started |
-| Next | M2 — Generalize the teaching engine (Level 4) | not started |
+| Done | M1 — Harden Linear Search Teaching | done (2026-07-04) |
+| Now | M2 — Generalize the teaching engine (Level 4) | not started |
 | Next | M3 — Binary Search on the shared engine | blocked by M2 |
 | Later | M4 — VCR-style trace scrubbing | not started |
 | Later | M5 — Widen the array/search surface | blocked by M2, M3 |
@@ -79,7 +79,18 @@ not just "working."
 **Exit criteria:** All edge cases above pass; QA_GATE manual checklist passes with
 no caveats.
 **Linked feature:** F001.
-**Status:** not started.
+**Status:** done (2026-07-04). The happy-path sync (block↔code↔state↔explanation)
+was already correct; the gap was that it was unguarded. Work done: (1) extracted
+`getTeachingStep` from `App.tsx` into the testable `src/dsa/learningSupport.ts`;
+(2) added 11 sync-contract tests that run the real engine and assert each frame's
+highlighted code line and explanation match the operation, across found
+(first/middle/last), missing, empty, one-item, and duplicate-target arrays — plus a
+guard that the generated Python still matches the line numbers the mapping assumes;
+(3) fixed a stale-program window where switching level/mode briefly painted the new
+level against the previous program (which could flash FAKE "supported" teaching) —
+`chooseLevel`/`chooseMode` now clear the program until the workspace reloads the
+correct starter. Verified: 32/32 tests, build, lint, clean-state; browser QA of the
+level round-trip and step-through.
 
 ### M2 — Generalize the teaching engine
 **Goal:** Level 4's block-built Linear Search is "partial" today because the sync
@@ -148,6 +159,12 @@ otherwise every new problem needs bespoke teaching wiring again.
 
 ## Changelog
 
+- **2026-07-04**: M1 (harden Linear Search Teaching / F001) completed. Extracted the
+  teaching-step sync logic into `learningSupport.ts`, locked it with 11 engine-driven
+  sync-contract tests (32 total, up from 21), and closed a stale-program-on-switch
+  window that could flash fake "supported" teaching. The extraction also sets up M2:
+  the teaching-step derivation is now an isolated, tested function to generalize.
+  M2 (generalize the teaching engine) is now the active Now milestone.
 - **2026-07-04**: M0 (design reset / F000) completed. Runtime-state surface flattened
   in `src/App.css`; block palette left expressive per plan. Verification and browser QA
   recorded on the milestone and in `docs/harness/FEATURE_LIST.json`. M1 (harden Linear
