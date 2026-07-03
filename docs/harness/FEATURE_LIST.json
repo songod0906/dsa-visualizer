@@ -13,7 +13,7 @@
       "priority": 1,
       "area": "design-system-cleanup",
       "title": "Reset the runtime-state surface to flat/functional",
-      "state": "not_started",
+      "state": "passing",
       "behavior": "The array board, pointers, and status badges should carry only learning-meaningful color and emphasis. Remove gradients, drop-shadows, and decorative pill badges from the runtime stage that do not signal an operation, comparison, or result, per docs/DESIGN_SYSTEM.md.",
       "scope": {
         "allowed_files": [
@@ -44,7 +44,11 @@
           "Confirm no layout regression in Puzzle or Sandbox mode"
         ]
       },
-      "evidence": []
+      "evidence": [
+        "2026-07-04: npm test 21/21 pass, npm run build OK (pre-existing chunk warning only), npm run lint clean, clean-state.sh OK. CSS bundle shrank 11.02kB -> 10.83kB (rules removed, none added).",
+        "2026-07-04: Browser QA on Levels 1 and 4 (Puzzle) and Sandbox. preview_inspect confirms .run-stage now background-image:none, background-color rgb(238,241,236), box-shadow:none. Active-cell green emphasis (signals current operation) preserved after Step. No layout regression.",
+        "Changes (src/App.css only): removed dual gradient on .run-stage; box-shadow none on .visual-panel/.code-panel; removed floating-card shadow on .block-panel (kept green frame ring as intentional palette identity); solid backgrounds on .state-readout/.mode-panel/.trace button (was rgba glass); squared decorative pills .variable-chip/.target-pill/.step-pill to 4px. Kept meaningful signals: active-cell ring, state cell colors, pointer labels, trace step markers. Block palette gradient host left untouched."
+      ]
     },
     {
       "id": "F001",

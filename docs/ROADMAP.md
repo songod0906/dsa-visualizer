@@ -34,7 +34,7 @@ A milestone is not "done" because code merged. It's done when:
 
 | | Milestone | Status |
 |---|---|---|
-| Now | M0 — Design reset | not started |
+| Done | M0 — Design reset | done (2026-07-04) |
 | Now | M1 — Harden Linear Search Teaching | not started |
 | Next | M2 — Generalize the teaching engine (Level 4) | not started |
 | Next | M3 — Binary Search on the shared engine | blocked by M2 |
@@ -56,7 +56,16 @@ rgba(0,0,0,0.26)` on the runtime stage, which is exactly the generic-dashboard l
 **Exit criteria:** Runtime stage screenshot passes the anti-slop checklist item by
 item. No unrelated behavior changes.
 **Linked feature:** F000 (see `docs/harness/FEATURE_LIST.json`).
-**Status:** not started.
+**Status:** done (2026-07-04). `src/App.css` only: removed the dual gradient on
+`.run-stage` (now flat neutral), dropped floating-card drop-shadows on the runtime
+and inspect panels, replaced fake glassmorphism (`rgba(255,255,255,0.x)`) with solid
+surfaces on the state readout / mode panel / trace rows, and squared the decorative
+`variable-chip` / `target-pill` / `step-pill` badges. Kept every learning-meaningful
+signal: active-cell green + ring, state cell colors, pointer labels, trace step
+markers. Block palette (gradient host, green frame) left intentionally expressive.
+Verified: 21/21 tests, build, lint, clean-state all pass; browser QA on Levels 1 & 4
+and Sandbox; `preview_inspect` confirms `.run-stage` has no background-image and no
+box-shadow.
 
 ### M1 — Harden Linear Search Teaching
 **Goal:** Single-block Linear Search Teaching is the only flow where
@@ -139,6 +148,10 @@ otherwise every new problem needs bespoke teaching wiring again.
 
 ## Changelog
 
+- **2026-07-04**: M0 (design reset / F000) completed. Runtime-state surface flattened
+  in `src/App.css`; block palette left expressive per plan. Verification and browser QA
+  recorded on the milestone and in `docs/harness/FEATURE_LIST.json`. M1 (harden Linear
+  Search Teaching) is now the active Now milestone.
 - **2026-07-04**: Roadmap created. Sequenced M0–M6 from the existing
   `docs/PRODUCT_VISION.md` priority order (Linear Search → Level 4 → Binary Search →
   LeetCode) plus two additions surfaced this session: M0 (design reset, prompted by
