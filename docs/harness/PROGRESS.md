@@ -25,17 +25,14 @@
 None.
 
 ## Next Best Action
-See `docs/ROADMAP.md` for the full sequencing. M0–M4 are done — the entire arrays/search
-teaching loop is real and synchronized across all three flows, plus full trace scrubbing.
-Everything remaining is expansion, not core-loop:
-- **M5 — Widen the array/search surface**: add adjacent patterns (insert/delete with shifting,
-  two-pointer) now that the engine generalizes. New territory; needs new blocks + engine cases +
-  teaching mappings + honest support classification. Bigger than a single feature — scope it into
-  one algorithm at a time.
-- **M6 — LeetCode arc**: the long-term `problem → pattern → visual plan → blocks → code → test`
-  flow. Largest scope; only start when explicitly prioritized.
-There is no forced next step — the product's stated MVP bar (arrays/search excellent) is met.
-Confirm direction with the owner before opening M5 or M6. Move only one feature to `active`.
+Stage 1 (arrays/search MVP) is complete. Stage 2 direction is chosen (owner-approved
+2026-07-04): **the LeetCode loop slice, depth over breadth** — full design in
+`docs/STAGE_2_LEETCODE.md`. The next milestone is **M6a — Problems foundation**
+(`docs/harness/FEATURE_LIST.json` feature F005): add a Problems mode with one hand-authored
+problem, a pure tested `gradeProgram` (repeated `executeProgram`, no engine change), Submit,
+and a results panel. Stage 2 is additive/reuse-only — engine.ts/blockly.ts/learningSupport.ts
+are forbidden for F005 to enforce that. Then F006 (debug-the-failure loop), then F007 (second
+problem). M5 (widen surface / Sorting) is deferred to Stage 3. Move only F005 to `active`.
 
 ## Known Risks
 - UI can drift toward generic dashboard patterns if design constraints are not checked.

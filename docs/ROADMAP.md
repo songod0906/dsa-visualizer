@@ -39,8 +39,15 @@ A milestone is not "done" because code merged. It's done when:
 | Done | M2 — Generalize the teaching engine (Level 4) | done (2026-07-04) |
 | Done | M3 — Binary Search on the shared engine | done (2026-07-04) |
 | Done | M4 — VCR-style trace scrubbing | done (2026-07-04) |
-| Now | M5 — Widen the array/search surface | unblocked (M2, M3 done) |
-| Later | M6 — LeetCode arc (problem → pattern → blocks → code → test) | blocked by M2 (done); ready when prioritized |
+| — | **Stage 1 complete: arrays/search MVP met** | — |
+| Now | M6a — Problems foundation (LeetCode slice, F005) | not started |
+| Next | M6b — Debug-the-failure loop (F006) | blocked by F005 |
+| Next | M6c — Second problem + polish (F007) | blocked by F005 |
+| Later | M5 — Widen the array/search surface (e.g. Sorting) | deferred (Stage 3 candidate) |
+| Later | M6d+ — pattern → visual plan layer of the arc | later stage of the LeetCode vision |
+
+Stage 2 = the LeetCode Loop. Full design: [STAGE_2_LEETCODE.md](STAGE_2_LEETCODE.md).
+Direction chosen 2026-07-04 (depth over breadth); see Changelog.
 
 ## Milestones
 
@@ -155,21 +162,33 @@ because they all derive from `frameIndex` — no engine or teaching change neede
 is exactly why this was cheap. Verified: 43/43 tests, build, lint, clean-state; browser
 QA of all four transport actions and both boundary states on Level 7.
 
-### M5 — Widen the array/search surface
-**Goal:** Still inside "arrays and search," round out adjacent patterns (e.g.
-insert/delete with shifting, two-pointer patterns) — only once M2/M3 prove the
-engine generalizes cleanly across two algorithms.
-**Why not sooner:** Adding surface area before the sync engine is trustworthy
-multiplies the number of places that can go stale or fake.
-**Status:** blocked by M2, M3.
-
-### M6 — The LeetCode arc
+### M6 — The LeetCode arc (Stage 2, now active)
 **Goal:** `problem → pattern → visual plan → blocks → code → runtime/test feedback`,
-per `docs/PRODUCT_VISION.md`'s long-term scope.
-**Why now it's sequenced, not scoped yet:** This is explicitly future scope until
-the arrays/search loop is excellent. It depends on M2's generalized engine existing,
-otherwise every new problem needs bespoke teaching wiring again.
-**Status:** blocked by M2. Do not start design work here before M2 exits.
+per `docs/PRODUCT_VISION.md`'s long-term scope. Stage 2 builds the first thin, honest,
+end-to-end slice: `problem → blocks → code → test feedback` (the `pattern → visual plan`
+middle comes later). Full design: [STAGE_2_LEETCODE.md](STAGE_2_LEETCODE.md).
+**Why now:** The arrays/search loop is excellent (M0–M4) and the M2 engine generalized,
+so a new problem does NOT need bespoke teaching wiring — grading is just repeated
+`executeProgram`. This is the differentiator ("you build the algorithm") and a smaller
+surface than a new algorithm family. Chosen over M5 (breadth) on 2026-07-04.
+**Decomposition (WIP = 1):**
+- **M6a / F005 — Problems foundation.** Problem/TestCase model, pure tested `gradeProgram`,
+  Problem 1 ("Find the Target"), Problems mode + Submit + results panel.
+  *Exit:* Submit grades all cases; correct programs pass, broken ones fail specific cases
+  with real data; Puzzle/Sandbox untouched; engine/blockly/learningSupport import-only.
+- **M6b / F006 — Debug-the-failure loop.** Load any (failing) case into the Run zone and
+  step/scrub it through the existing teaching layer. *Exit:* failed case → visual debug.
+- **M6c / F007 — Second problem + polish.** Add Problem 2 (binary, sorted), refine copy,
+  edge-case test coverage. *Exit:* both problems gradeable end-to-end.
+**Status:** M6a active (Stage 2 planned 2026-07-04). Later stages of the arc
+(`pattern → visual plan`, more problems) tracked as M6d+.
+
+### M5 — Widen the array/search surface (deferred)
+**Goal:** Round out adjacent array patterns / a new family (e.g. Sorting, insert/delete
+with shifting, two-pointer) through the same engine.
+**Status:** deferred as a Stage 3 candidate. Explicitly de-prioritized 2026-07-04 in favor
+of the LeetCode depth slice (M6), because breadth makes the app more VisuAlgo-like whereas
+the LeetCode loop advances the differentiator. Reconsider after Stage 2 ships.
 
 ## How to update this roadmap
 
@@ -184,6 +203,13 @@ otherwise every new problem needs bespoke teaching wiring again.
 
 ## Changelog
 
+- **2026-07-04**: Stage 1 (arrays/search MVP) declared complete (M0–M4). Stage 2 direction
+  chosen — **depth over breadth**: build the LeetCode loop slice (M6) rather than widen the
+  algorithm surface (M5). Rationale: M6 advances the differentiating vision ("you build the
+  algorithm"), is a smaller code surface (grading = repeated `executeProgram`, no engine
+  change), and is the stronger portfolio story; M5 (Sorting etc.) would make the app more
+  VisuAlgo-like and is deferred to a Stage 3 candidate. M6 decomposed into F005/F006/F007;
+  full design in `docs/STAGE_2_LEETCODE.md`. Owner-approved fork.
 - **2026-07-04**: M4 (VCR-style trace scrubbing / F004) completed. Added a jump-to-first /
   step-back / step-forward / jump-to-last transport cluster to the runtime controls, with
   boundary-aware disabling. Pure UI on existing data — backward scrubbing re-syncs every

@@ -242,6 +242,125 @@
         "2026-07-04: Added a transport cluster to the controls row (App.tsx/App.css): jump-to-first (SkipBack), step-back (StepBack), step-forward (existing stepOnce, now StepForward icon), jump-to-last (SkipForward). New handlers stepBack/jumpToStart/jumpToEnd set frameIndex; backward controls disabled at frame 0, forward controls disabled at the last frame (derived atStart/atEnd). No engine/teaching changes - scrubbing works because every surface already derives from frameIndex.",
         "2026-07-04: Browser QA on Level 7 - at frame 0 the two backward controls are disabled; jump-to-last -> step 9/9 line 7 with forward controls disabled; step-back -> step 8/9 with line 6 + explanation + trace all re-synced to the earlier frame; jump-to-first -> step 1/9 with backward disabled again. No console errors. Transport renders as a grouped dark cluster before Run/Pause/Reset."
       ]
+    },
+    {
+      "id": "F005",
+      "milestone": "M6a",
+      "priority": 6,
+      "area": "leetcode-problems-foundation",
+      "title": "Problems mode: build blocks, Submit, grade against test cases",
+      "state": "not_started",
+      "behavior": "Add a Problems mode (alongside Puzzle/Sandbox) with one hand-authored problem ('Find the Target', linear search). The learner builds blocks and hits Submit; the program is graded against multiple test cases (found/missing/empty/first/last/duplicate) and a results panel shows N/M passed with real per-case data for failures. Grading is a pure function that calls executeProgram per case - no engine, blockly, or teaching changes. See docs/STAGE_2_LEETCODE.md.",
+      "scope": {
+        "allowed_files": [
+          "src/dsa/types.ts",
+          "src/dsa/problems.ts",
+          "src/dsa/problems.test.ts",
+          "src/App.tsx",
+          "src/App.css"
+        ],
+        "forbidden_files": [
+          "package.json",
+          "package-lock.json",
+          "src/dsa/engine.ts",
+          "src/dsa/blockly.ts",
+          "src/dsa/learningSupport.ts"
+        ],
+        "scope_note": "Stage 2 must be additive/reuse-only: import executeProgram, blocks, and the teaching layer; do not edit them. engine/blockly/learningSupport are forbidden to enforce this. If a real edit is needed, stop and record why in DECISIONS.md before expanding scope."
+      },
+      "availability": {
+        "full_support": ["hand-authored problems solvable with existing blocks"],
+        "partial_support": [],
+        "unsupported": ["arbitrary problem import", "natural-language problem parsing", "arbitrary user code execution", "pattern -> visual plan layer"]
+      },
+      "verification": {
+        "commands": ["npm test", "npm run build", "npm run lint"],
+        "manual_checks": [
+          "Enter Problems mode and read the problem statement",
+          "Build linear search, Submit, confirm all cases pass",
+          "Build a deliberately broken program, Submit, confirm the correct specific cases fail with real data",
+          "Confirm Puzzle and Sandbox still work unchanged"
+        ]
+      },
+      "evidence": []
+    },
+    {
+      "id": "F006",
+      "milestone": "M6b",
+      "priority": 7,
+      "area": "leetcode-debug-loop",
+      "title": "Load a failing test case into the visualization to step/scrub-debug it",
+      "state": "not_started",
+      "behavior": "After Submit, the learner can select any test case (especially a failing one) and load it into the Run zone, then use the existing step/scrub/teaching to see where the algorithm diverges. Closes the loop test-feedback -> visual debug. Reuses the M1-M4 teaching + transport unchanged.",
+      "scope": {
+        "allowed_files": [
+          "src/dsa/problems.ts",
+          "src/dsa/problems.test.ts",
+          "src/App.tsx",
+          "src/App.css"
+        ],
+        "forbidden_files": [
+          "package.json",
+          "package-lock.json",
+          "src/dsa/engine.ts",
+          "src/dsa/blockly.ts",
+          "src/dsa/learningSupport.ts"
+        ]
+      },
+      "availability": {
+        "full_support": ["stepping/scrubbing a selected test case"],
+        "partial_support": [],
+        "unsupported": ["arbitrary problem import"]
+      },
+      "verification": {
+        "commands": ["npm test", "npm run build", "npm run lint"],
+        "manual_checks": [
+          "Submit, click a failed case, confirm it loads into the visualization",
+          "Step and scrub the loaded case; confirm teaching stays synchronized",
+          "Confirm the selected case's array/target drive the Run and Inspect zones"
+        ]
+      },
+      "evidence": [],
+      "depends_on": ["F005"]
+    },
+    {
+      "id": "F007",
+      "milestone": "M6c",
+      "priority": 8,
+      "area": "leetcode-second-problem",
+      "title": "Add the binary-search problem and polish grading UX",
+      "state": "not_started",
+      "behavior": "Add Problem 2 ('Search a Sorted Array', binary search) with sorted test cases (found/missing/first/last/empty), refine the results/copy, and cover grading edge cases in tests.",
+      "scope": {
+        "allowed_files": [
+          "src/dsa/problems.ts",
+          "src/dsa/problems.test.ts",
+          "src/App.tsx",
+          "src/App.css"
+        ],
+        "forbidden_files": [
+          "package.json",
+          "package-lock.json",
+          "src/dsa/engine.ts",
+          "src/dsa/blockly.ts",
+          "src/dsa/learningSupport.ts"
+        ]
+      },
+      "availability": {
+        "full_support": ["linear and binary search problems"],
+        "partial_support": [],
+        "unsupported": ["problems needing unsupported algorithms", "arbitrary problem import"]
+      },
+      "verification": {
+        "commands": ["npm test", "npm run build", "npm run lint"],
+        "manual_checks": [
+          "Solve both problems end-to-end and confirm grading is correct",
+          "Confirm results copy is clear for pass and fail",
+          "Confirm grading tests cover found/missing/empty/first/last/duplicate"
+        ]
+      },
+      "evidence": [],
+      "depends_on": ["F005"]
     }
   ]
 }
