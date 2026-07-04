@@ -13,6 +13,12 @@ export function gradeProgram(instructions: ProgramInstruction[], cases: TestCase
   })
 }
 
+// Index of the first failing case, or -1 if every case passed. Used to jump the
+// learner straight to the broken case after Submit so they can debug it.
+export function firstFailingIndex(results: CaseResult[]): number {
+  return results.findIndex((result) => !result.passed)
+}
+
 export const problems: Problem[] = [
   {
     id: 'find-the-target',

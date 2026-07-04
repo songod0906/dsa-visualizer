@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gradeProgram, problems } from './problems'
+import { firstFailingIndex, gradeProgram, problems } from './problems'
 import type { ProgramInstruction } from './types'
 
 const findTheTarget = problems[0]
@@ -57,6 +57,26 @@ describe('gradeProgram', () => {
     ])
     expect(results[0].actual).toBeNull()
     expect(results[0].passed).toBe(false)
+  })
+})
+
+describe('firstFailingIndex', () => {
+  it('returns -1 when every case passes', () => {
+    const results = gradeProgram([{ type: 'linearSearch' }], findTheTarget.cases)
+    expect(firstFailingIndex(results)).toBe(-1)
+  })
+
+  it('returns the index of the first failing case', () => {
+    const broken: ProgramInstruction[] = [
+      { type: 'compareIndex', index: 0 },
+      { type: 'ifCurrentEqualsTarget', body: [{ type: 'outputFoundCurrent' }] },
+      { type: 'outputNotFound' },
+    ]
+    const results = gradeProgram(broken, findTheTarget.cases)
+    const idx = firstFailingIndex(results)
+    // Case 0 (target 15, expected 2) is the first the broken program gets wrong.
+    expect(idx).toBe(0)
+    expect(results[idx].passed).toBe(false)
   })
 })
 

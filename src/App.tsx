@@ -13,7 +13,7 @@ import {
 import { executeProgram, createInitialState } from './dsa/engine'
 import { getLearningSupport, getTeachingStep } from './dsa/learningSupport'
 import { levels } from './dsa/levels'
-import { gradeProgram, problems } from './dsa/problems'
+import { firstFailingIndex, gradeProgram, problems } from './dsa/problems'
 import type { LearningSupport, TeachingStep } from './dsa/learningSupport'
 import type { CaseResult, ExecutionFrame, LearningMode, Level, ProgramInstruction, SandboxConfig } from './dsa/types'
 
@@ -98,6 +98,7 @@ function App() {
   const [mode, setMode] = useState<'puzzle' | 'sandbox' | 'problems'>('puzzle')
   const [learningMode, setLearningMode] = useState<LearningMode>('teaching')
   const [gradeResults, setGradeResults] = useState<CaseResult[] | null>(null)
+  const [selectedCaseIndex, setSelectedCaseIndex] = useState(0)
   const [levelIndex, setLevelIndex] = useState(0)
   const [sandbox, setSandbox] = useState<SandboxConfig>({ array: [4, 8, 12, 16, 20, 24], target: 16 })
   const [instructions, setInstructions] = useState<ProgramInstruction[]>([])
@@ -109,9 +110,11 @@ function App() {
 
   const activeLevel = levels[levelIndex]
   const activeProblem = problems[0]
-  // In Problems mode the visualization runs the first test case; the learner
-  // grades against all cases via Submit. (Case selection is F006.)
-  const problemCase = activeProblem.cases[0]
+  // In Problems mode the visualization runs the selected test case; the learner
+  // grades against all cases via Submit and can click a (failing) case to load
+  // it here and step/scrub through where it breaks.
+  const safeCaseIndex = Math.min(selectedCaseIndex, activeProblem.cases.length - 1)
+  const problemCase = activeProblem.cases[safeCaseIndex]
   const activeArray =
     mode === 'puzzle' ? activeLevel.array : mode === 'problems' ? problemCase.array : sandbox.array
   const activeTarget =
@@ -270,6 +273,12 @@ function App() {
     setFeedback(passed ? activeLevel.success : 'Not quite yet. Step through the trace and adjust the blocks.')
   }
 
+  const selectCase = (index: number) => {
+    setSelectedCaseIndex(index)
+    setFrameIndex(0)
+    setRunning(false)
+  }
+
   const submitProblem = () => {
     if (instructions.length === 0) {
       setFeedback('Build a program before submitting.')
@@ -278,10 +287,15 @@ function App() {
     const results = gradeProgram(instructions, activeProblem.cases)
     setGradeResults(results)
     const passedCount = results.filter((result) => result.passed).length
+    const firstFail = firstFailingIndex(results)
+    if (firstFail >= 0) {
+      // Jump the learner straight to the first broken case so they can debug it.
+      selectCase(firstFail)
+    }
     setFeedback(
       passedCount === results.length
         ? `All ${results.length} test cases passed. Nice — your program handles every case.`
-        : `${passedCount} of ${results.length} test cases passed. Check the failing cases below.`,
+        : `${passedCount} of ${results.length} test cases passed. The first failing case is loaded below — step through it to see where it breaks.`,
     )
   }
 
@@ -349,6 +363,7 @@ function App() {
     setFrameIndex(0)
     setRunning(false)
     setGradeResults(null)
+    setSelectedCaseIndex(0)
     // Same reason as chooseLevel: never render the new mode against the old
     // mode's program before the workspace reloads the correct starter.
     setInstructions([])
@@ -497,21 +512,29 @@ function App() {
           {mode === 'problems' && gradeResults && (
             <div className="results-panel" aria-label="Test case results">
               <div className="results-heading">
-                <span>Test cases</span>
+                <span>Test cases — click one to debug it</span>
                 <span>{gradeResults.filter((result) => result.passed).length} / {gradeResults.length} passed</span>
               </div>
               <ul className="results-list">
                 {gradeResults.map((result, index) => (
-                  <li key={index} className={`result-row ${result.passed ? 'pass' : 'fail'}`}>
-                    <span className="result-badge">{result.passed ? '✓' : '✗'}</span>
-                    <span className="result-io">
-                      search([{result.testCase.array.join(', ') || ' '}], {result.testCase.target})
-                    </span>
-                    <span className="result-expect">
-                      {result.passed
-                        ? `→ ${result.testCase.expected}`
-                        : `expected ${result.testCase.expected}, got ${result.actual ?? '—'}`}
-                    </span>
+                  <li key={index}>
+                    <button
+                      type="button"
+                      className={`result-row ${result.passed ? 'pass' : 'fail'} ${index === safeCaseIndex ? 'selected' : ''}`}
+                      onClick={() => selectCase(index)}
+                      aria-label={`Load test case ${index + 1} into the visualization`}
+                      aria-pressed={index === safeCaseIndex}
+                    >
+                      <span className="result-badge">{result.passed ? '✓' : '✗'}</span>
+                      <span className="result-io">
+                        search([{result.testCase.array.join(', ') || ' '}], {result.testCase.target})
+                      </span>
+                      <span className="result-expect">
+                        {result.passed
+                          ? `→ ${result.testCase.expected}`
+                          : `expected ${result.testCase.expected}, got ${result.actual ?? '—'}`}
+                      </span>
+                    </button>
                   </li>
                 ))}
               </ul>

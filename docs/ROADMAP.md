@@ -41,8 +41,8 @@ A milestone is not "done" because code merged. It's done when:
 | Done | M4 — VCR-style trace scrubbing | done (2026-07-04) |
 | — | **Stage 1 complete: arrays/search MVP met** | — |
 | Done | M6a — Problems foundation (LeetCode slice, F005) | done (2026-07-04) |
-| Now | M6b — Debug-the-failure loop (F006) | not started (unblocked by F005) |
-| Next | M6c — Second problem + polish (F007) | not started (unblocked by F005) |
+| Done | M6b — Debug-the-failure loop (F006) | done (2026-07-04) |
+| Now | M6c — Second problem + polish (F007) | not started (unblocked by F005) |
 | Later | M5 — Widen the array/search surface (e.g. Sorting) | deferred (Stage 3 candidate) |
 | Later | M6d+ — pattern → visual plan layer of the arc | later stage of the LeetCode vision |
 
@@ -179,8 +179,11 @@ surface than a new algorithm family. Chosen over M5 (breadth) on 2026-07-04.
   whole "test feedback" step is one pure function + UI. 48 tests. Browser QA confirmed
   6/6-pass grading; the failing-row UI is unit-tested (Blockly can't be scripted via the
   preview harness — see F005 evidence).
-- **M6b / F006 — Debug-the-failure loop.** Load any (failing) case into the Run zone and
-  step/scrub it through the existing teaching layer. *Exit:* failed case → visual debug.
+- **M6b / F006 — Debug-the-failure loop.** DONE (2026-07-04). Results rows are clickable and
+  load their case into the Run zone; the visualized case is now a `selectedCaseIndex` (was
+  hardcoded to case 0); Submit auto-loads the first failing case via a pure tested
+  `firstFailingIndex`. Stepping/scrubbing works on the loaded case with full teaching sync,
+  reusing M1–M4 unchanged. 50 tests. Closes the loop `test feedback → visual debug`.
 - **M6c / F007 — Second problem + polish.** Add Problem 2 (binary, sorted), refine copy,
   edge-case test coverage. *Exit:* both problems gradeable end-to-end.
 **Status:** M6a active (Stage 2 planned 2026-07-04). Later stages of the arc
@@ -206,6 +209,11 @@ the LeetCode loop advances the differentiator. Reconsider after Stage 2 ships.
 
 ## Changelog
 
+- **2026-07-04**: M6b (Debug-the-failure loop / F006) completed. Test-case rows are now
+  clickable and load their case into the Run zone; Submit auto-loads the first failing case;
+  the learner scrubs through it (M4 transport) with full teaching sync to see where the
+  algorithm diverges. Closes `test feedback → visual debug`. Still reuse-only (engine/blockly/
+  learningSupport untouched). 50 tests (up from 48). M6c (second problem) is next.
 - **2026-07-04**: M6a (Problems foundation / F005) completed — the first LeetCode-loop slice
   ships. A new "Problems" mode lets the learner build blocks and Submit to grade against
   6 test cases with a pass/fail results panel. Confirmed the reuse-only bet: engine/blockly/

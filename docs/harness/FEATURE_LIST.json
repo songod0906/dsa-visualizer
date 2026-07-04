@@ -296,7 +296,7 @@
       "priority": 7,
       "area": "leetcode-debug-loop",
       "title": "Load a failing test case into the visualization to step/scrub-debug it",
-      "state": "not_started",
+      "state": "passing",
       "behavior": "After Submit, the learner can select any test case (especially a failing one) and load it into the Run zone, then use the existing step/scrub/teaching to see where the algorithm diverges. Closes the loop test-feedback -> visual debug. Reuses the M1-M4 teaching + transport unchanged.",
       "scope": {
         "allowed_files": [
@@ -326,7 +326,12 @@
           "Confirm the selected case's array/target drive the Run and Inspect zones"
         ]
       },
-      "evidence": [],
+      "evidence": [
+        "2026-07-04: npm test 50/50 pass (was 48; +2 firstFailingIndex), build OK, lint clean, clean-state OK. engine/blockly/learningSupport still untouched.",
+        "2026-07-04: problems.ts gained a pure firstFailingIndex(results) helper (index of first failing case, -1 if all pass), unit-tested. App.tsx: selectedCaseIndex state + safeCaseIndex clamp; the visualized case is now activeProblem.cases[safeCaseIndex] (was hardcoded [0]); results rows are buttons that call selectCase(index) -> setSelectedCaseIndex + frameIndex 0; submitProblem auto-loads the first failing case via firstFailingIndex; chooseMode resets the selection.",
+        "2026-07-04: Browser QA - Submit -> results panel heading 'click one to debug it'; clicking the target-99 row loads array/target 99 into the Run zone (target-pill=99, trace 14 steps, row highlighted .selected); jump-to-last -> step 14/14 line 5 return -1, result -1, 6 comparisons, explanation synced. Clicking the [7,7,7] row loads target 7, 4-step trace, stable. Transport/scrub work on the loaded case. No console errors.",
+        "2026-07-04: LIMITATION (same as F005) - the auto-jump-to-first-FAILING-case could not be shown in-browser because the correct starter passes all 6 cases and a broken program cannot be scripted through Blockly via the preview harness. The two pieces are each verified: selectCase loading (browser) + firstFailingIndex (unit test). A brief frameIndex race was observed once under rapid scripted evals (frames recompute on case change) but is not reproducible in normal use (jump-to-end holds steady across reads)."
+      ],
       "depends_on": ["F005"]
     },
     {
