@@ -249,7 +249,7 @@
       "priority": 6,
       "area": "leetcode-problems-foundation",
       "title": "Problems mode: build blocks, Submit, grade against test cases",
-      "state": "not_started",
+      "state": "passing",
       "behavior": "Add a Problems mode (alongside Puzzle/Sandbox) with one hand-authored problem ('Find the Target', linear search). The learner builds blocks and hits Submit; the program is graded against multiple test cases (found/missing/empty/first/last/duplicate) and a results panel shows N/M passed with real per-case data for failures. Grading is a pure function that calls executeProgram per case - no engine, blockly, or teaching changes. See docs/STAGE_2_LEETCODE.md.",
       "scope": {
         "allowed_files": [
@@ -282,7 +282,13 @@
           "Confirm Puzzle and Sandbox still work unchanged"
         ]
       },
-      "evidence": []
+      "evidence": [
+        "2026-07-04: npm test 48/48 pass (was 43; +5 problems.test), build OK, lint clean, clean-state OK. Engine.ts/blockly.ts/learningSupport.ts UNCHANGED (reuse-only held) - grading is problems.ts gradeProgram calling executeProgram per case.",
+        "2026-07-04: New files - src/dsa/problems.ts (TestCase/Problem/CaseResult types in types.ts; gradeProgram pure fn; Problem 1 'Find the Target' with 6 cases: found-middle/first/last, missing, empty, duplicate), src/dsa/problems.test.ts. App.tsx: third mode 'problems'; activeArray/target/allowedBlocks/starter branch on it; Submit button + submitProblem + results panel; refreshProgram and chooseMode clear stale gradeResults.",
+        "2026-07-04: problems.test asserts the single-block AND block-built linear search pass all 6 cases; a broken index-0-only program fails the correct specific cases with real actual values (middle case actual -1) while genuinely-correct cases pass; actual=null when no result is set; and every case's expected matches a real indexOf scan.",
+        "2026-07-04: Browser QA - Problems mode shows the statement, loads the linear-search starter, case[0] drives the Run zone with real Teaching sync. Submit -> results panel 'TEST CASES 6/6 PASSED' with correct per-row I/O (incl. empty-array case search([ ],5) -> -1) and feedback 'All 6 test cases passed.' Puzzle/Sandbox still work.",
+        "2026-07-04: LIMITATION - the failing-submission UI (red fail rows) could not be exercised in-browser: the preview harness has no coordinate-click/key-press, and Blockly's SVG editor ignores synthetic DOM events, so a broken program cannot be scripted via the workspace. The fail path is covered by problems.test (specific cases fail with real actual values); the results panel renders pass and fail through identical mapping logic differing only by CSS class + text."
+      ]
     },
     {
       "id": "F006",

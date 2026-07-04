@@ -1,62 +1,65 @@
 # Session Handoff
 
 ## Last Session Summary
-Executed M4 / F004: added VCR-style trace scrubbing (jump-to-first, step-back, step-forward,
-jump-to-last) to the runtime controls. Pure UI on existing data — no engine or teaching change,
-because every teaching surface already derives from `frameIndex`, so moving the playhead
-backward re-syncs the code highlight, explanation, visualization, and trace for free. This
-completes the core arrays/search loop plus its most-requested control gap.
+Shipped M6a / F005 — the first slice of the Stage 2 LeetCode loop. A new "Problems" mode lets
+the learner build an algorithm from blocks and Submit it to be graded against a set of test
+cases, with a pass/fail results panel. The headline: the reuse-only bet held — `engine.ts`,
+`blockly.ts`, and `learningSupport.ts` were not touched. Grading is a single pure function
+(`gradeProgram`) that calls the existing `executeProgram` once per case.
 
 ## Active Feature
-None. F000 (M0) through F004 (M4) are done and marked `passing`. Remaining milestones (M5, M6)
-are expansion, not core-loop — confirm direction with the owner before starting.
+None. F000–F005 are done and marked `passing`. Next is F006 (M6b).
 
-## How M4 works
-- `App.tsx`: new handlers `stepBack` / `jumpToStart` / `jumpToEnd` set `frameIndex` (all also
-  `setRunning(false)`). Derived `atStart` / `atEnd` (from a clamped index) disable the backward
-  controls at frame 0 and the forward controls at the last frame.
-- The controls row now leads with a `.transport` cluster of four icon buttons (SkipBack,
-  StepBack, StepForward, SkipForward from lucide-react), then Run / Pause / Reset / Speed / Check.
-  The old text "Step" button became the StepForward icon in the cluster.
-- `App.css`: `.transport` + `.controls .transport-btn` styles (dark grouped cluster, disabled dimming).
+## How F005 works
+- `src/dsa/types.ts`: `TestCase`, `Problem`, `CaseResult` types.
+- `src/dsa/problems.ts`: `gradeProgram(instructions, cases)` (pure — runs `executeProgram` per
+  case, compares final `resultIndex` to `expected`) and Problem 1 "Find the Target" (6 cases:
+  found-middle/first/last, missing, empty, duplicate). `src/dsa/problems.test.ts` covers it.
+- `src/App.tsx`: a third mode `'problems'`. `activeArray`/`activeTarget`/`allowedBlocks`/starter
+  branch on it; the visualization runs `activeProblem.cases[0]` (F005 hardcodes case 0). A
+  Submit button calls `submitProblem` → `gradeProgram` → `setGradeResults` → results panel.
+  `refreshProgram` and `chooseMode` clear stale `gradeResults`.
+- `src/App.css`: `.results-panel` / `.result-row` (pass=green, fail=red left border).
 
 ## Changed Files In Last Session
-- `src/App.tsx` (transport handlers, atStart/atEnd, icon imports, controls JSX)
-- `src/App.css` (.transport / .transport-btn)
+- `src/dsa/types.ts`, `src/dsa/problems.ts` (new), `src/dsa/problems.test.ts` (new)
+- `src/App.tsx`, `src/App.css`
 - `docs/ROADMAP.md`, `docs/harness/FEATURE_LIST.json`, `docs/harness/PROGRESS.md`,
   `docs/harness/SESSION_HANDOFF.md` (tracking)
-- No engine/teaching/test changes — M4 is UI-only on existing data.
+- engine.ts / blockly.ts / learningSupport.ts: NOT touched (reuse-only, as scoped).
 
 ## Verification In Last Session
-- `npm test`: 43 tests passed (unchanged; M4 is UI-only).
+- `npm test`: 4 files, 48 tests passed (was 43; +5 problems.test).
 - `npm run build`, `npm run lint`, `bash scripts/harness/clean-state.sh`: all passed.
-- Browser QA (Level 7): frame 0 -> backward controls disabled; jump-to-last -> step 9/9, line 7,
-  forward disabled; step-back -> step 8/9 with line 6 + explanation + trace re-synced;
-  jump-to-first -> step 1/9, backward disabled again. No console errors.
+- Browser QA: Problems mode shows the statement, loads the linear-search starter, case[0]
+  drives the Run zone with real Teaching sync; Submit → results panel "6/6 passed" with correct
+  per-row I/O (incl. empty-array case) and "All 6 test cases passed." feedback. Puzzle/Sandbox
+  unchanged.
+- KNOWN GAP: the failing-row UI (red rows) is unit-tested but was NOT exercised in-browser —
+  the preview harness has no coordinate-click/key-press and Blockly's SVG editor ignores
+  synthetic DOM events, so a broken program can't be scripted through the workspace. The fail
+  path is asserted in problems.test (specific cases fail with real actual values); pass and fail
+  rows share the same render mapping.
 
-## State Of The Product
-The MVP bar from PRODUCT_VISION.md ("arrays and search excellent") is met: all three search
-flows (single-block linear, block-built linear, binary) teach with real, tested,
-frame-synchronized code highlighting + explanations, on a flat VisuAlgo-clean UI, with full
-trace scrubbing. 43 tests lock the teaching-sync contracts.
-
-## Notes For The Next Session (expansion, needs owner direction)
-- M5 (widen array/search surface): pick ONE adjacent pattern (e.g. insert/delete with shifting,
-  or a two-pointer technique). Each needs: new Blockly block(s) in `blockly.ts` + a
-  `ProgramInstruction` type in `types.ts` + an engine case in `engine.ts` + a teaching mapping in
-  `learningSupport.ts` + honest `getLearningSupport` classification + tests. Follow the M2/M3
-  pattern (recipe vs block, source-instruction line mapping). Keep all existing tests green.
-- M6 (LeetCode arc): largest scope; do not start without explicit prioritization.
-- Reminder: the F001 stale-switch guard sets `instructions` to [] briefly on level change; a
-  scripted rapid-click test can observe the transient empty program, but it settles correctly on
-  normal navigation. Do not remove the guard (prevents a fake-support flash).
+## Notes For The Next Session (F006 / M6b groundwork)
+- F005 hardcodes the visualized case as `activeProblem.cases[0]` (`problemCase` in App.tsx).
+  F006 generalizes this to a `selectedCaseIndex` state; the visualization runs the selected
+  case, and clicking a results-panel row (especially a failing one) selects it. Then the
+  learner steps/scrubs (M4 transport) through the failing case to see the divergence.
+- Keep it reuse-only: engine/blockly/learningSupport stay forbidden for F006.
+- Reminder: the F001 stale-switch guard sets `instructions` to [] briefly on mode/level change;
+  a scripted rapid-click test can observe the transient empty program, but it settles correctly
+  on normal navigation. Do not remove the guard.
 
 ## Open Risks
 - Future sessions must check `git status --short` before editing.
 - Do not mark a feature `passing` unless verification commands pass and evidence is recorded in `FEATURE_LIST.json`.
-- The ~896kB JS bundle triggers a Vite chunk-size warning. Pre-existing, out of scope; revisit only if it becomes a real load-time problem.
+- The ~900kB JS bundle triggers a Vite chunk-size warning. Pre-existing, out of scope.
+- Browser QA of Blockly-driven states (building/breaking programs) is not scriptable via the
+  preview harness; rely on unit tests for program-shape-dependent behavior and browser QA for
+  rendering/wiring.
 
 ## Next Suggested Action
-Core loop is complete. Confirm with the owner whether to pursue M5 (widen surface) or M6
-(LeetCode arc), then move only that one feature to `active`. Keep all F001–F003 teaching-sync
-tests green through any future engine change.
+Start M6b / F006 (debug-the-failure loop). Read `docs/STAGE_2_LEETCODE.md` and the F006 entry,
+move only F006 to `active`, generalize the visualized case to a selectable index, and keep all
+existing tests green.

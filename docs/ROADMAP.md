@@ -40,9 +40,9 @@ A milestone is not "done" because code merged. It's done when:
 | Done | M3 — Binary Search on the shared engine | done (2026-07-04) |
 | Done | M4 — VCR-style trace scrubbing | done (2026-07-04) |
 | — | **Stage 1 complete: arrays/search MVP met** | — |
-| Now | M6a — Problems foundation (LeetCode slice, F005) | not started |
-| Next | M6b — Debug-the-failure loop (F006) | blocked by F005 |
-| Next | M6c — Second problem + polish (F007) | blocked by F005 |
+| Done | M6a — Problems foundation (LeetCode slice, F005) | done (2026-07-04) |
+| Now | M6b — Debug-the-failure loop (F006) | not started (unblocked by F005) |
+| Next | M6c — Second problem + polish (F007) | not started (unblocked by F005) |
 | Later | M5 — Widen the array/search surface (e.g. Sorting) | deferred (Stage 3 candidate) |
 | Later | M6d+ — pattern → visual plan layer of the arc | later stage of the LeetCode vision |
 
@@ -172,10 +172,13 @@ so a new problem does NOT need bespoke teaching wiring — grading is just repea
 `executeProgram`. This is the differentiator ("you build the algorithm") and a smaller
 surface than a new algorithm family. Chosen over M5 (breadth) on 2026-07-04.
 **Decomposition (WIP = 1):**
-- **M6a / F005 — Problems foundation.** Problem/TestCase model, pure tested `gradeProgram`,
-  Problem 1 ("Find the Target"), Problems mode + Submit + results panel.
-  *Exit:* Submit grades all cases; correct programs pass, broken ones fail specific cases
-  with real data; Puzzle/Sandbox untouched; engine/blockly/learningSupport import-only.
+- **M6a / F005 — Problems foundation.** DONE (2026-07-04). Problem/TestCase/CaseResult
+  types, pure tested `gradeProgram` (repeated `executeProgram`), Problem 1 ("Find the
+  Target", 6 cases), a third "Problems" mode, Submit, and a results panel. engine.ts /
+  blockly.ts / learningSupport.ts were **not touched** — the reuse-only discipline held; the
+  whole "test feedback" step is one pure function + UI. 48 tests. Browser QA confirmed
+  6/6-pass grading; the failing-row UI is unit-tested (Blockly can't be scripted via the
+  preview harness — see F005 evidence).
 - **M6b / F006 — Debug-the-failure loop.** Load any (failing) case into the Run zone and
   step/scrub it through the existing teaching layer. *Exit:* failed case → visual debug.
 - **M6c / F007 — Second problem + polish.** Add Problem 2 (binary, sorted), refine copy,
@@ -203,6 +206,11 @@ the LeetCode loop advances the differentiator. Reconsider after Stage 2 ships.
 
 ## Changelog
 
+- **2026-07-04**: M6a (Problems foundation / F005) completed — the first LeetCode-loop slice
+  ships. A new "Problems" mode lets the learner build blocks and Submit to grade against
+  6 test cases with a pass/fail results panel. Confirmed the reuse-only bet: engine/blockly/
+  learningSupport were untouched; grading is a pure function over `executeProgram`. 48 tests
+  (up from 43). M6b (debug-the-failure loop) is next.
 - **2026-07-04**: Stage 1 (arrays/search MVP) declared complete (M0–M4). Stage 2 direction
   chosen — **depth over breadth**: build the LeetCode loop slice (M6) rather than widen the
   algorithm surface (M5). Rationale: M6 advances the differentiating vision ("you build the

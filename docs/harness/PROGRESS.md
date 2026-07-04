@@ -1,12 +1,12 @@
 # Project Progress
 
 ## Current Verified State
-- Last verified: 2026-07-04 (F004 trace scrubbing)
-- Tests: 43/43 passing via `npm test`
+- Last verified: 2026-07-04 (F005 Problems foundation)
+- Tests: 48/48 passing via `npm test`
 - Build: passing via `npm run build` (pre-existing chunk-size warning only)
 - Lint: passing via `npm run lint`
 - Clean state: passing via `bash scripts/harness/clean-state.sh`
-- Active feature: none (F000–F004 done; F005/M5 or M6 next)
+- Active feature: none (F000–F005 done; F006/M6b next)
 - Current blocker: none
 
 ## Recently Completed
@@ -18,6 +18,7 @@
 - [2026-07-04] Completed M2 / F002 (the load-bearing milestone): generalized the teaching engine so Level 4's block-built linear search gets real per-line teaching through the SAME engine as the single-block recipe. Each frame carries its source instruction; a line map resolves it to a code line. `getLearningSupport` marks the canonical block shape supported, non-canonical partial. 38 tests. Verified and browser-QA'd. F002 state = passing. M3 unblocked.
 - [2026-07-04] Completed M3 / F003: Binary Search Teaching from "not ready" to fully supported via `teachBinarySearchRecipe` (fixed line mapping) + support flip — no engine rewrite, confirming M2 generalized. Fixed hardcoded linear-search intro in ModePanel (now uses `support.reason`). 43 tests. Verified and browser-QA'd (Level 7 mid→5, compare→6, found→7). F003 state = passing. All three search algorithms now teach through one engine.
 - [2026-07-04] Completed M4 / F004: added a jump-to-first / step-back / step-forward / jump-to-last transport cluster to the runtime controls (App.tsx/App.css), with boundary-aware disabling. Pure UI on existing data — backward scrubbing re-syncs all teaching surfaces because they derive from `frameIndex`. 43 tests (UI-only). Verified and browser-QA'd on Level 7. F004 state = passing.
+- [2026-07-04] Completed M6a / F005 (Stage 2 first slice): new "Problems" mode — build blocks, Submit, grade against test cases with a pass/fail results panel. New src/dsa/problems.ts (pure `gradeProgram` + Problem 1). engine/blockly/learningSupport untouched (reuse-only held). 48 tests. Verified and browser-QA'd (6/6 pass). F005 state = passing.
 - Existing product guidance documents: `docs/PRODUCT_VISION.md` and `docs/QA_GATE.md`.
 - Existing app support truth: single-block Linear Search Teaching is supported, Level 4 block-built Linear Search is partial, and Binary Search Teaching is not ready.
 
@@ -25,14 +26,14 @@
 None.
 
 ## Next Best Action
-Stage 1 (arrays/search MVP) is complete. Stage 2 direction is chosen (owner-approved
-2026-07-04): **the LeetCode loop slice, depth over breadth** — full design in
-`docs/STAGE_2_LEETCODE.md`. The next milestone is **M6a — Problems foundation**
-(`docs/harness/FEATURE_LIST.json` feature F005): add a Problems mode with one hand-authored
-problem, a pure tested `gradeProgram` (repeated `executeProgram`, no engine change), Submit,
-and a results panel. Stage 2 is additive/reuse-only — engine.ts/blockly.ts/learningSupport.ts
-are forbidden for F005 to enforce that. Then F006 (debug-the-failure loop), then F007 (second
-problem). M5 (widen surface / Sorting) is deferred to Stage 3. Move only F005 to `active`.
+Stage 2 is underway; M6a (F005) shipped. The next milestone is **M6b — Debug-the-failure loop**
+(`docs/harness/FEATURE_LIST.json` feature F006): let the learner select any test case
+(especially a failing one) and load it into the Run zone to step/scrub-debug it through the
+existing teaching layer. Design in `docs/STAGE_2_LEETCODE.md`. Groundwork: F005 currently
+hardcodes the visualization to `activeProblem.cases[0]` (see `problemCase` in App.tsx) — F006
+generalizes that to a selected case index, and wires the results panel rows to select their
+case. Still reuse-only (engine/blockly/learningSupport forbidden). Then F007 (second problem).
+Move only F006 to `active`.
 
 ## Known Risks
 - UI can drift toward generic dashboard patterns if design constraints are not checked.

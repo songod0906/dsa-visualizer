@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import * as Blockly from 'blockly/core'
-import { BookOpen, Check, Pause, Play, RotateCcw, Settings2, SkipBack, SkipForward, StepBack, StepForward } from 'lucide-react'
+import { BookOpen, Check, ListChecks, Pause, Play, RotateCcw, Settings2, SkipBack, SkipForward, StepBack, StepForward } from 'lucide-react'
 import './App.css'
 import {
   instructionsToPython,
@@ -13,8 +13,9 @@ import {
 import { executeProgram, createInitialState } from './dsa/engine'
 import { getLearningSupport, getTeachingStep } from './dsa/learningSupport'
 import { levels } from './dsa/levels'
+import { gradeProgram, problems } from './dsa/problems'
 import type { LearningSupport, TeachingStep } from './dsa/learningSupport'
-import type { ExecutionFrame, LearningMode, Level, ProgramInstruction, SandboxConfig } from './dsa/types'
+import type { CaseResult, ExecutionFrame, LearningMode, Level, ProgramInstruction, SandboxConfig } from './dsa/types'
 
 const sandboxScenarios = [
   {
@@ -94,8 +95,9 @@ function App() {
   const workspace = useRef<Blockly.WorkspaceSvg | null>(null)
   const runTimer = useRef<number | null>(null)
 
-  const [mode, setMode] = useState<'puzzle' | 'sandbox'>('puzzle')
+  const [mode, setMode] = useState<'puzzle' | 'sandbox' | 'problems'>('puzzle')
   const [learningMode, setLearningMode] = useState<LearningMode>('teaching')
+  const [gradeResults, setGradeResults] = useState<CaseResult[] | null>(null)
   const [levelIndex, setLevelIndex] = useState(0)
   const [sandbox, setSandbox] = useState<SandboxConfig>({ array: [4, 8, 12, 16, 20, 24], target: 16 })
   const [instructions, setInstructions] = useState<ProgramInstruction[]>([])
@@ -106,11 +108,22 @@ function App() {
   const [feedback, setFeedback] = useState('Drag blocks, then step through the program.')
 
   const activeLevel = levels[levelIndex]
-  const activeArray = mode === 'puzzle' ? activeLevel.array : sandbox.array
-  const activeTarget = mode === 'puzzle' ? activeLevel.target : sandbox.target
+  const activeProblem = problems[0]
+  // In Problems mode the visualization runs the first test case; the learner
+  // grades against all cases via Submit. (Case selection is F006.)
+  const problemCase = activeProblem.cases[0]
+  const activeArray =
+    mode === 'puzzle' ? activeLevel.array : mode === 'problems' ? problemCase.array : sandbox.array
+  const activeTarget =
+    mode === 'puzzle' ? activeLevel.target : mode === 'problems' ? problemCase.target : sandbox.target
   const allowedBlocks = useMemo(
-    () => (mode === 'puzzle' ? activeLevel.allowedBlocks : allBlocks),
-    [activeLevel.allowedBlocks, mode],
+    () =>
+      mode === 'puzzle'
+        ? activeLevel.allowedBlocks
+        : mode === 'problems'
+          ? activeProblem.allowedBlocks
+          : allBlocks,
+    [activeLevel.allowedBlocks, activeProblem.allowedBlocks, mode],
   )
   const frames = useMemo(
     () => executeProgram(instructions, activeArray, activeTarget),
@@ -138,13 +151,17 @@ function App() {
   const activeHint =
     mode === 'puzzle'
       ? activeLevel.hints[hintIndex % activeLevel.hints.length]
-      : 'Sandbox loop: choose an experiment, pick Linear or Binary, then Step until the result changes.'
+      : mode === 'problems'
+        ? 'A correct answer handles every case — a missing target returns -1, and an empty array returns -1 too.'
+        : 'Sandbox loop: choose an experiment, pick Linear or Binary, then Step until the result changes.'
 
   const refreshProgram = useCallback(() => {
     if (!workspace.current) return
     setInstructions(workspaceToInstructions(workspace.current))
     setFrameIndex(0)
     setRunning(false)
+    // Editing the blocks invalidates any prior Submit result.
+    setGradeResults(null)
   }, [])
 
   const loadStarter = useCallback(
@@ -174,7 +191,7 @@ function App() {
       renderer: 'zelos',
     })
 
-    loadStarter(mode === 'puzzle' ? activeLevel.starterBlocks[0] : 'linearSearch')
+    loadStarter(mode === 'puzzle' ? activeLevel.starterBlocks[0] : mode === 'problems' ? activeProblem.starterBlocks : 'linearSearch')
     const listener = () => refreshProgram()
     workspace.current.addChangeListener(listener)
     refreshProgram()
@@ -184,7 +201,7 @@ function App() {
       workspace.current?.dispose()
       workspace.current = null
     }
-  }, [activeLevel.starterBlocks, allowedBlocks, loadStarter, mode, refreshProgram])
+  }, [activeLevel.starterBlocks, activeProblem.starterBlocks, allowedBlocks, loadStarter, mode, refreshProgram])
 
   useEffect(() => {
     if (!running) return
@@ -253,6 +270,21 @@ function App() {
     setFeedback(passed ? activeLevel.success : 'Not quite yet. Step through the trace and adjust the blocks.')
   }
 
+  const submitProblem = () => {
+    if (instructions.length === 0) {
+      setFeedback('Build a program before submitting.')
+      return
+    }
+    const results = gradeProgram(instructions, activeProblem.cases)
+    setGradeResults(results)
+    const passedCount = results.filter((result) => result.passed).length
+    setFeedback(
+      passedCount === results.length
+        ? `All ${results.length} test cases passed. Nice — your program handles every case.`
+        : `${passedCount} of ${results.length} test cases passed. Check the failing cases below.`,
+    )
+  }
+
   const chooseLevel = (next: number) => {
     setLevelIndex(next)
     setHintIndex(0)
@@ -311,18 +343,21 @@ function App() {
     )
   }
 
-  const chooseMode = (nextMode: 'puzzle' | 'sandbox') => {
+  const chooseMode = (nextMode: 'puzzle' | 'sandbox' | 'problems') => {
     setMode(nextMode)
     setHintIndex(0)
     setFrameIndex(0)
     setRunning(false)
+    setGradeResults(null)
     // Same reason as chooseLevel: never render the new mode against the old
     // mode's program before the workspace reloads the correct starter.
     setInstructions([])
     setFeedback(
       nextMode === 'puzzle'
         ? `Loaded Level ${activeLevel.id}: ${activeLevel.title}.`
-        : 'Sandbox ready. Change the data or run either search recipe.',
+        : nextMode === 'problems'
+          ? `Problem: ${activeProblem.title}. Build a program, then Submit to grade it against all test cases.`
+          : 'Sandbox ready. Change the data or run either search recipe.',
     )
   }
 
@@ -346,6 +381,9 @@ function App() {
           <button className={mode === 'sandbox' ? 'active' : ''} onClick={() => chooseMode('sandbox')}>
             <Settings2 size={16} /> Sandbox
           </button>
+          <button className={mode === 'problems' ? 'active' : ''} onClick={() => chooseMode('problems')}>
+            <ListChecks size={16} /> Problems
+          </button>
         </div>
       </header>
 
@@ -368,6 +406,11 @@ function App() {
               ))}
             </div>
           </>
+        ) : mode === 'problems' ? (
+          <div className="lesson-copy problem-copy">
+            <strong>{activeProblem.title}</strong>
+            <span>{activeProblem.statement}</span>
+          </div>
         ) : (
         <SandboxControls
           sandbox={sandbox}
@@ -393,7 +436,7 @@ function App() {
               <span className="zone-kicker">Build</span>
               <span>Logic blocks</span>
             </div>
-            <button onClick={() => loadStarter(mode === 'puzzle' ? activeLevel.starterBlocks[0] : 'linearSearch')}>Starter</button>
+            <button onClick={() => loadStarter(mode === 'puzzle' ? activeLevel.starterBlocks[0] : mode === 'problems' ? activeProblem.starterBlocks : 'linearSearch')}>Starter</button>
           </div>
           <div ref={blocklyHost} className="blockly-host" />
         </aside>
@@ -445,8 +488,35 @@ function App() {
               Speed
               <input type="range" min="180" max="1200" value={speed} onChange={(event) => setSpeed(Number(event.target.value))} />
             </label>
-            <button className="primary-action" onClick={checkAnswer}><Check size={16} /> Check</button>
+            {mode === 'problems' ? (
+              <button className="primary-action" onClick={submitProblem}><ListChecks size={16} /> Submit</button>
+            ) : (
+              <button className="primary-action" onClick={checkAnswer}><Check size={16} /> Check</button>
+            )}
           </div>
+          {mode === 'problems' && gradeResults && (
+            <div className="results-panel" aria-label="Test case results">
+              <div className="results-heading">
+                <span>Test cases</span>
+                <span>{gradeResults.filter((result) => result.passed).length} / {gradeResults.length} passed</span>
+              </div>
+              <ul className="results-list">
+                {gradeResults.map((result, index) => (
+                  <li key={index} className={`result-row ${result.passed ? 'pass' : 'fail'}`}>
+                    <span className="result-badge">{result.passed ? '✓' : '✗'}</span>
+                    <span className="result-io">
+                      search([{result.testCase.array.join(', ') || ' '}], {result.testCase.target})
+                    </span>
+                    <span className="result-expect">
+                      {result.passed
+                        ? `→ ${result.testCase.expected}`
+                        : `expected ${result.testCase.expected}, got ${result.actual ?? '—'}`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           <div className="run-footer">
             <div className="feedback-row">
               <p>{feedback}</p>

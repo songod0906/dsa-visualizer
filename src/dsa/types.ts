@@ -75,3 +75,26 @@ export interface SandboxConfig {
   array: number[]
   target: number
 }
+
+// A single graded input for a LeetCode-style Problem. `expected` is the final
+// resultIndex the program should reach (-1 means "not found").
+export interface TestCase {
+  array: number[]
+  target: number
+  expected: number
+}
+
+export interface Problem {
+  id: string
+  title: string
+  statement: string
+  allowedBlocks: string[]
+  starterBlocks: string
+  cases: TestCase[]
+}
+
+export interface CaseResult {
+  testCase: TestCase
+  actual: number | null
+  passed: boolean
+}

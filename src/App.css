@@ -622,6 +622,84 @@ button.active,
   padding: 8px 12px 12px;
 }
 
+.results-panel {
+  display: grid;
+  gap: 6px;
+  margin: 8px 12px 0;
+  max-height: 168px;
+  overflow: auto;
+}
+
+.results-heading {
+  align-items: center;
+  color: #cbd5e1;
+  display: flex;
+  font-size: 12px;
+  font-weight: 900;
+  justify-content: space-between;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.results-list {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.result-row {
+  align-items: center;
+  background: #0f1720;
+  border: 1px solid #263241;
+  border-left: 3px solid #46586a;
+  border-radius: 6px;
+  color: #e2e8f0;
+  display: grid;
+  font-size: 12px;
+  gap: 8px;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  padding: 6px 9px;
+}
+
+.result-row.pass {
+  border-left-color: #22c55e;
+}
+
+.result-row.fail {
+  border-left-color: #ef4444;
+}
+
+.result-badge {
+  font-weight: 900;
+  text-align: center;
+}
+
+.result-row.pass .result-badge {
+  color: #22c55e;
+}
+
+.result-row.fail .result-badge {
+  color: #ef4444;
+}
+
+.result-io {
+  font-family: "SFMono-Regular", Consolas, ui-monospace, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-expect {
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.result-row.fail .result-expect {
+  color: #fca5a5;
+}
+
 .python-code {
   background: var(--code);
   color: #d1fadf;
