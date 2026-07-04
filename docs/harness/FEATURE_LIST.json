@@ -103,7 +103,7 @@
       "priority": 3,
       "area": "teaching-engine-generalization",
       "title": "Generalize the teaching engine so Level 4 rides shared logic, not a one-off",
-      "state": "not_started",
+      "state": "passing",
       "behavior": "Extract the narration/highlight logic that currently only understands the single canned Linear Search instruction sequence into something that walks any valid instruction-model program (loop, compare, if, return) generically. Level 4 block-built Linear Search should work through this shared engine, not bespoke wiring, and the single-block flow from F001 must keep working through the same code path with no new special case.",
       "scope": {
         "allowed_files": [
@@ -113,18 +113,20 @@
           "src/dsa/engine.test.ts",
           "src/dsa/learningSupport.ts",
           "src/dsa/learningSupport.test.ts",
+          "src/dsa/types.ts",
           "src/App.tsx",
           "src/App.css"
         ],
         "forbidden_files": [
           "package.json",
           "package-lock.json"
-        ]
+        ],
+        "scope_note": "2026-07-04: types.ts added to allowed_files (owner decision, see DECISIONS.md). True generalization threads a source-instruction reference through execution events, requiring an optional `source?: ProgramInstruction` field on ExecutionEvent. Backward-compatible."
       },
       "availability": {
-        "full_support": ["supported Level 4 Linear Search blocks"],
-        "partial_support": ["unsupported Level 4 block combinations"],
-        "unsupported": ["arbitrary user code execution", "non-search algorithms"]
+        "full_support": ["supported Level 4 Linear Search blocks (scan -> compare/if-equals -> found, plus not-found)"],
+        "partial_support": ["Level 4 block combinations outside the recognized linear-search shape"],
+        "unsupported": ["arbitrary user code execution", "non-search algorithms", "Binary Search Teaching (M3)"]
       },
       "verification": {
         "commands": [
@@ -140,7 +142,14 @@
           "Confirm Puzzle and Sandbox navigation still works"
         ]
       },
-      "evidence": []
+      "evidence": [
+        "2026-07-04: npm test 38/38 pass (was 32; +6 M2 tests), build OK, lint clean, clean-state OK.",
+        "2026-07-04: Design - each execution frame now carries its source ProgramInstruction (optional field on ExecutionEvent, engine.ts threads it through). blockly.ts buildProgramCode() returns the Python plus a Map<instruction, lineNumber> keyed by object identity. getTeachingStep dispatches: single-block linearSearch keeps its fixed line mapping; block-built programs look up frame.event.source in the line map, so Level 4 and the single-block recipe share ONE engine with no duplicated per-line logic.",
+        "2026-07-04: getLearningSupport now recognizes the canonical block-built linear search shape (isSupportedBlockLinearSearch) and returns teaching/codeHighlight/explanation = supported for it; non-canonical Level 4 arrangements stay 'partial' with no fake highlight (unit tested both ways).",
+        "2026-07-04: Tests - blockly.test asserts the line map points at the right text for nested instructions; learningSupport.test runs the REAL engine on the canonical Level 4 program and asserts every sourced frame highlights exactly that instruction's line (scan->for, compare->compare line, if->if line, found->return i, missing->return -1), summary===event.message, and no supported step is ever left without a highlight. A test confirms the recipe and block builds return the same found index.",
+        "2026-07-04: Browser QA on Level 4 Teaching - stepping shows line 2 (for) on loop step, line 3 (compare) on compare, line 4 (if) with correct true/false explanation, line 5 (return i) on found, all synced with the active cell, pointer, trace, and explanation. Previously this level said 'Line-by-line teaching is not wired for this block-built version yet.' Level 5 single-block regression re-verified (line 2 on first loop step).",
+        "2026-07-04: Note - the F001 stale-switch guard means instructions is briefly [] on level change; a scripted rapid-click sequence can observe that transient empty program, but it settles correctly on any normal navigation (verified by clean reload -> Level 5 = 5 code lines, 14 frames). Not a product bug."
+      ]
     },
     {
       "id": "F003",

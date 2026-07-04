@@ -1,52 +1,63 @@
 # Session Handoff
 
 ## Last Session Summary
-Executed M1 / F001: hardened the single-block Linear Search Teaching flow. The happy-path
-synchronization (block ↔ generated code ↔ runtime state ↔ explanation ↔ trace) was already
-correct in the engine; the gap was that it was unguarded and untestable. Extracted the
-teaching-step derivation into a testable module, locked the sync contract with engine-driven
-tests, and closed a stale-program window on level/mode switch that could briefly show fake
-"supported" teaching.
+Executed M2 / F002, the load-bearing milestone: generalized the teaching engine so Level 4's
+block-built linear search gets real, per-line synchronized teaching through the SAME engine as
+the single-block recipe — not a bespoke Level-4 path. This proves the architecture generalizes,
+which is the precondition the rest of the roadmap depended on.
 
 ## Active Feature
-None. F000 (M0) and F001 (M1) are done and marked `passing`. Next is F002 (M2).
+None. F000 (M0), F001 (M1), F002 (M2) are done and marked `passing`. Next is F003 (M3).
+
+## How M2 works (read before M3)
+- `ExecutionEvent` gained an optional `source?: ProgramInstruction` field (`src/dsa/types.ts`).
+  `engine.ts` stamps each frame's event with the instruction it is executing (the single-block
+  `linearSearch`/`binarySearch` recipe cases deliberately leave it undefined).
+- `blockly.ts` `buildProgramCode(instructions)` returns `{ code, lineOf }` where `lineOf` is a
+  `Map<ProgramInstruction, number>` (1-indexed primary line per instruction, incl. nested),
+  keyed by object identity. `instructionsToPython` is now a thin wrapper over it.
+- `learningSupport.ts` `getTeachingStep` dispatches: `isLinearSearchProgram` -> fixed-line
+  `teachLinearSearchRecipe`; otherwise `teachBlockProgram`, which reads `frame.event.source`,
+  looks up its line via `buildProgramCode`, and explains by event kind. `isSupportedBlockLinearSearch`
+  gates `getLearningSupport` to mark the canonical block shape supported (non-canonical stays partial).
 
 ## Changed Files In Last Session
-- `src/dsa/learningSupport.ts` (added `TeachingStep` type + `getTeachingStep`, moved from App.tsx)
-- `src/dsa/learningSupport.test.ts` (added 11 sync-contract tests)
-- `src/App.tsx` (import `getTeachingStep` from the module; removed local copy; added
-  `setInstructions([])` guard in `chooseLevel`/`chooseMode`)
-- `docs/ROADMAP.md`, `docs/harness/FEATURE_LIST.json`, `docs/harness/PROGRESS.md`,
-  `docs/harness/SESSION_HANDOFF.md` (tracking)
+- `src/dsa/types.ts` (optional `source` on ExecutionEvent — scope expansion, see DECISIONS.md)
+- `src/dsa/engine.ts` (thread source instruction through push + helpers)
+- `src/dsa/blockly.ts` (`buildProgramCode` + line-tracking emitter; `instructionsToPython` wraps it)
+- `src/dsa/learningSupport.ts` (recognizer + recipe/block dispatch in getTeachingStep)
+- `src/dsa/blockly.test.ts`, `src/dsa/learningSupport.test.ts` (line-map + block sync tests)
+- `docs/ROADMAP.md`, `docs/harness/FEATURE_LIST.json`, `docs/harness/DECISIONS.md`,
+  `docs/harness/PROGRESS.md`, `docs/harness/SESSION_HANDOFF.md` (tracking + scope decision)
+- App.tsx: NOT changed this milestone (getTeachingStep/getLearningSupport signatures held).
 
 ## Verification In Last Session
-- `npm test`: 3 files passed, 32 tests passed (was 21; +11 sync-contract tests).
+- `npm test`: 3 files passed, 38 tests passed (was 32; +6 M2 tests).
 - `npm run build`: passed with existing Vite chunk-size warning only.
 - `npm run lint`: passed.
 - `bash scripts/harness/clean-state.sh`: passed.
-- Browser QA: Level 5 step-through shows code line 2/3 highlight synced with the active cell,
-  pointer, explanation, and trace. Level 5 -> 1 -> 5 round trip settles to correct supported
-  teaching with no stuck-empty state and no fake-support flash.
+- Browser QA: Level 4 Teaching steps through lines 2 (for) -> 3 (compare) -> 4 (if, correct
+  true/false explanation) -> 5 (return i on found), all synced with the active cell, pointer,
+  trace, and explanation. Level 5 single-block regression re-verified (line 2 on first loop step).
 
-## Notes For The Next Session (M2 groundwork)
-- `getTeachingStep(frame, instructions, support)` in `src/dsa/learningSupport.ts` currently
-  only produces highlights/explanations when `isLinearSearchProgram(instructions)` is true
-  (single `{type:'linearSearch'}`). M2's job is to generalize this to any valid instruction
-  program (scanArray/compareIndex/ifCurrentEqualsTarget/output...) so Level 4's block-built
-  search gets real teaching through the SAME function.
-- The engine already executes the block-built program correctly (see engine.test.ts
-  "executes learner-built linear search blocks"); what's missing is the frame -> code-line +
-  explanation mapping for those event kinds. The `note` events emitted by
-  `ifCurrentEqualsTarget` and the `scanArray` loop are the hooks to map.
-- Keep the F001 single-block sync tests green — they are the regression guard that
-  generalization must not break.
+## Notes For The Next Session (M3 groundwork)
+- Binary Search Teaching (F003) should mirror the linear recipe: add `teachBinarySearchRecipe`
+  with a fixed line mapping for the 11-line binary block, and flip `getLearningSupport` to mark
+  `[{binarySearch}]` supported. The engine already emits left/mid/right moves + compares.
+- Binary Search binary-window visualization (discarded cells) is already wired in ArrayBoard
+  (`hasBinaryWindow`), so the visual half largely exists; the gap is the code-line + explanation
+  mapping and honest support classification.
+- A scripted rapid-click sequence can transiently observe an empty program right after a
+  level switch (F001 guard sets instructions to [] until the workspace reloads). This settles
+  correctly on any normal navigation and is not a product bug — do not "fix" it by removing the
+  guard, which prevents a worse fake-support flash.
 
 ## Open Risks
 - Future sessions must check `git status --short` before editing.
 - Do not mark a feature `passing` unless verification commands pass and evidence is recorded in `FEATURE_LIST.json`.
-- The ~894kB JS bundle triggers a Vite chunk-size warning. Pre-existing, out of scope; revisit only if it becomes a real load-time problem.
+- The ~896kB JS bundle triggers a Vite chunk-size warning. Pre-existing, out of scope; revisit only if it becomes a real load-time problem.
 
 ## Next Suggested Action
-Start M2 / F002. Read `docs/ROADMAP.md` M2 and the F002 entry, move only F002 to `active`,
-then generalize `getTeachingStep` to walk arbitrary valid instruction programs, proving it on
-Level 4 while keeping all F001 single-block tests green.
+Start M3 / F003. Read `docs/ROADMAP.md` M3 and the F003 entry, move only F003 to `active`, then
+add `teachBinarySearchRecipe` + supported classification for the binary recipe, keeping all
+F001/F002 tests green.

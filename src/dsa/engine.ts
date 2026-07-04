@@ -30,10 +30,14 @@ export function executeProgram(
   const state = createInitialState(array, target)
   const frames: ExecutionFrame[] = []
 
-  const push = (event: ExecutionEvent, update?: (draft: RunState) => void) => {
+  const push = (
+    event: ExecutionEvent,
+    update?: (draft: RunState) => void,
+    source?: ProgramInstruction,
+  ) => {
     update?.(state)
     frames.push({
-      event,
+      event: source ? { ...event, source } : event,
       state: {
         ...state,
         array: [...state.array],
@@ -49,7 +53,7 @@ export function executeProgram(
     return index
   }
 
-  const compareAt = (index: number) => {
+  const compareAt = (index: number, source?: ProgramInstruction) => {
     const value = valueAt(index)
     const match = value === state.target
     push(
@@ -67,10 +71,16 @@ export function executeProgram(
         draft.operationCount += 1
         draft.message = match ? 'That cell matches the target.' : 'No match here; keep searching.'
       },
+      source,
     )
   }
 
-  const movePointer = (pointer: PointerName, index: number, message?: string) => {
+  const movePointer = (
+    pointer: PointerName,
+    index: number,
+    message?: string,
+    source?: ProgramInstruction,
+  ) => {
     push(
       {
         kind: 'movePointer',
@@ -83,12 +93,13 @@ export function executeProgram(
         if (pointer === 'current') draft.currentIndex = index
         draft.message = message ?? `Pointer ${pointer} is now at ${index}.`
       },
+      source,
     )
   }
 
   const isFinished = () => state.status === 'finished'
 
-  const setFound = (index: number) => {
+  const setFound = (index: number, source?: ProgramInstruction) => {
     push(
       {
         kind: 'setResult',
@@ -102,10 +113,11 @@ export function executeProgram(
         draft.status = 'finished'
         draft.message = `Found target ${draft.target} at index ${index}.`
       },
+      source,
     )
   }
 
-  const setNotFound = () => {
+  const setNotFound = (source?: ProgramInstruction) => {
     push(
       {
         kind: 'setResult',
@@ -118,6 +130,7 @@ export function executeProgram(
         draft.status = 'finished'
         draft.message = `Target ${draft.target} is not in this array.`
       },
+      source,
     )
   }
 
@@ -140,19 +153,20 @@ export function executeProgram(
               draft.lastRead = typeof value === 'number' ? value : null
               draft.message = `array[${instruction.index}] gives ${value ?? 'nothing'}.`
             },
+            instruction,
           )
           break
         }
         case 'setPointer':
-          movePointer(instruction.pointer, instruction.index)
+          movePointer(instruction.pointer, instruction.index, undefined, instruction)
           break
         case 'compareIndex':
-          compareAt(resolveIndex(instruction.index))
+          compareAt(resolveIndex(instruction.index), instruction)
           break
         case 'scanArray':
           for (let i = 0; i < state.array.length; i += 1) {
             if (isFinished()) break
-            movePointer('current', i, `Loop step: current visits index ${i}.`)
+            movePointer('current', i, `Loop step: current visits index ${i}.`, instruction)
             run(instruction.body)
           }
           break
@@ -168,6 +182,7 @@ export function executeProgram(
               (draft) => {
                 draft.message = 'Condition true.'
               },
+              instruction,
             )
             run(instruction.body)
           } else {
@@ -180,17 +195,18 @@ export function executeProgram(
               (draft) => {
                 draft.message = 'Condition false.'
               },
+              instruction,
             )
           }
           break
         }
         case 'outputFoundCurrent': {
           const index = state.currentIndex ?? state.lastComparedIndex ?? 0
-          setFound(index)
+          setFound(index, instruction)
           break
         }
         case 'outputNotFound':
-          setNotFound()
+          setNotFound(instruction)
           break
         case 'linearSearch':
           for (let i = 0; i < state.array.length; i += 1) {

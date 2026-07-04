@@ -36,8 +36,8 @@ A milestone is not "done" because code merged. It's done when:
 |---|---|---|
 | Done | M0 — Design reset | done (2026-07-04) |
 | Done | M1 — Harden Linear Search Teaching | done (2026-07-04) |
-| Now | M2 — Generalize the teaching engine (Level 4) | not started |
-| Next | M3 — Binary Search on the shared engine | blocked by M2 |
+| Done | M2 — Generalize the teaching engine (Level 4) | done (2026-07-04) |
+| Now | M3 — Binary Search on the shared engine | not started (unblocked by M2) |
 | Later | M4 — VCR-style trace scrubbing | not started |
 | Later | M5 — Widen the array/search surface | blocked by M2, M3 |
 | Later | M6 — LeetCode arc (problem → pattern → blocks → code → test) | blocked by M2 |
@@ -106,7 +106,18 @@ into the first time.
 level allows. The single-block version keeps working through the same engine with
 no new code path.
 **Linked feature:** F002.
-**Status:** not started.
+**Status:** done (2026-07-04). Implemented via source-instruction correlation rather
+than shape-matching: each execution frame now carries the `ProgramInstruction` it is
+running (optional `source` on `ExecutionEvent`, threaded through `engine.ts`), and
+`blockly.ts` `buildProgramCode()` returns an instruction→line map. `getTeachingStep`
+dispatches — the single-block `linearSearch` recipe keeps its fixed line mapping; any
+block-built program looks up `frame.event.source` in the line map, so Level 4 and the
+single-block recipe run through ONE engine with no duplicated per-line logic.
+`getLearningSupport` recognizes the canonical block-built shape and marks it fully
+supported; non-canonical Level 4 arrangements stay honestly `partial`. Verified: 38/38
+tests (engine-driven block sync tests + line-map tests), build, lint, clean-state;
+browser QA of Level 4 stepping through lines 2→3→4→5 in sync, Level 5 regression intact.
+**The hinge held:** the engine generalized without a rewrite, which is what unblocks M3.
 
 ### M3 — Binary Search on the shared engine
 **Goal:** Binary Search Teaching goes from "not ready" to real, using the same
@@ -117,7 +128,13 @@ linear-search-shaped. If Binary Search needs its own bespoke engine, M2 wasn't d
 and remaining search interval correctly, with no stale text leaking from other
 algorithms or modes.
 **Linked feature:** F003.
-**Status:** blocked by M2.
+**Status:** not started (unblocked 2026-07-04 by M2). Note for implementation: the
+single-block `binarySearch` is a recipe like `linearSearch` — it is one instruction that
+expands to an 11-line block, so it most likely wants a fixed-line teaching mapping
+(`teachBinarySearchRecipe`, mirroring `teachLinearSearchRecipe`) rather than the
+source-instruction path. The engine already emits `left`/`mid`/`right` pointer moves and
+compares; the work is the frame→line+explanation mapping and flipping
+`getLearningSupport` to mark the binary recipe supported. Keep all F001/F002 tests green.
 
 ### M4 — VCR-style trace scrubbing
 **Goal:** We already store the full frame trace and render clickable past steps.
@@ -159,6 +176,15 @@ otherwise every new problem needs bespoke teaching wiring again.
 
 ## Changelog
 
+- **2026-07-04**: M2 (generalize the teaching engine / F002) completed — the load-bearing
+  milestone. Level 4's block-built linear search now gets real per-line teaching through
+  the SAME engine as the single-block recipe, via source-instruction correlation (frames
+  carry their source instruction; a line map resolves it to a code line) rather than a
+  bespoke Level-4 path. `getLearningSupport` marks the canonical block shape supported and
+  keeps non-canonical arrangements honestly partial. 38 tests (up from 32). This proves the
+  architecture generalizes, which is the precondition the rest of the roadmap depended on;
+  M3 (Binary Search) is now unblocked. Scope note: expanded F002 to touch `types.ts` (see
+  DECISIONS.md) for the optional `source` field on `ExecutionEvent`.
 - **2026-07-04**: M1 (harden Linear Search Teaching / F001) completed. Extracted the
   teaching-step sync logic into `learningSupport.ts`, locked it with 11 engine-driven
   sync-contract tests (32 total, up from 21), and closed a stale-program-on-switch

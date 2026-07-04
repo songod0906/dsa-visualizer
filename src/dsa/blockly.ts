@@ -168,9 +168,28 @@ export function workspaceToInstructions(workspace: Blockly.Workspace): ProgramIn
     .flatMap((block) => blockToInstructions(block))
 }
 
+export type ProgramCode = {
+  code: string
+  // 1-indexed line number of each instruction's primary (first) generated line,
+  // keyed by instruction object identity. Includes nested instructions.
+  lineOf: Map<ProgramInstruction, number>
+}
+
+// Generates the beginner Python and, in the same walk, records which line each
+// instruction begins on. The teaching layer uses lineOf to highlight the exact
+// line a given execution frame is running.
+export function buildProgramCode(instructions: ProgramInstruction[]): ProgramCode {
+  const lineOf = new Map<ProgramInstruction, number>()
+  if (instructions.length === 0) {
+    return { code: '# Drag blocks here to build a program.', lineOf }
+  }
+  // Line 1 is the `def` header; the body begins at line 2.
+  const body = emitPython(instructions, 1, 2, lineOf)
+  return { code: ['def search(array, target):', ...body].join('\n'), lineOf }
+}
+
 export function instructionsToPython(instructions: ProgramInstruction[]): string {
-  if (instructions.length === 0) return '# Drag blocks here to build a program.'
-  return ['def search(array, target):', ...emitPython(instructions, 1)].join('\n')
+  return buildProgramCode(instructions).code
 }
 
 export function starterXml(kind: string): string {
@@ -242,33 +261,68 @@ function singleBlockToInstruction(block: Blockly.Block): ProgramInstruction | nu
   }
 }
 
-function emitPython(instructions: ProgramInstruction[], indent: number): string[] {
+// Emits the Python for a list of instructions starting at absolute line
+// `firstLine`, recording each instruction's start line in `lineOf` as it goes.
+function emitPython(
+  instructions: ProgramInstruction[],
+  indent: number,
+  firstLine: number,
+  lineOf: Map<ProgramInstruction, number>,
+): string[] {
   const pad = '    '.repeat(indent)
-  return instructions.flatMap((instruction) => {
+  const out: string[] = []
+  let line = firstLine
+
+  // Emit a leaf instruction (no nested body) and advance the line counter.
+  const leaf = (instruction: ProgramInstruction, produced: string[]) => {
+    lineOf.set(instruction, line)
+    out.push(...produced)
+    line += produced.length
+  }
+
+  // Emit a block instruction: its header line, then its nested body.
+  const block = (instruction: ProgramInstruction, header: string, body: ProgramInstruction[]) => {
+    lineOf.set(instruction, line)
+    out.push(header)
+    line += 1
+    const inner = emitPython(body, indent + 1, line, lineOf)
+    out.push(...inner)
+    line += inner.length
+  }
+
+  for (const instruction of instructions) {
     switch (instruction.type) {
       case 'readIndex':
-        return [`${pad}value = array[${instruction.index}]`]
+        leaf(instruction, [`${pad}value = array[${instruction.index}]`])
+        break
       case 'setPointer':
-        return [`${pad}${instruction.pointer} = ${instruction.index}`]
+        leaf(instruction, [`${pad}${instruction.pointer} = ${instruction.index}`])
+        break
       case 'compareIndex':
-        return [`${pad}array[${instruction.index}] == target`]
+        leaf(instruction, [`${pad}array[${instruction.index}] == target`])
+        break
       case 'scanArray':
-        return [`${pad}for i in range(len(array)):`, ...emitPython(instruction.body, indent + 1)]
+        block(instruction, `${pad}for i in range(len(array)):`, instruction.body)
+        break
       case 'ifCurrentEqualsTarget':
-        return [`${pad}if array[i] == target:`, ...emitPython(instruction.body, indent + 1)]
+        block(instruction, `${pad}if array[i] == target:`, instruction.body)
+        break
       case 'outputFoundCurrent':
-        return [`${pad}return i`]
+        leaf(instruction, [`${pad}return i`])
+        break
       case 'outputNotFound':
-        return [`${pad}return -1`]
+        leaf(instruction, [`${pad}return -1`])
+        break
       case 'linearSearch':
-        return [
+        leaf(instruction, [
           `${pad}for i in range(len(array)):`,
           `${pad}    if array[i] == target:`,
           `${pad}        return i`,
           `${pad}return -1`,
-        ]
+        ])
+        break
       case 'binarySearch':
-        return [
+        leaf(instruction, [
           `${pad}left = 0`,
           `${pad}right = len(array) - 1`,
           `${pad}while left <= right:`,
@@ -280,9 +334,12 @@ function emitPython(instructions: ProgramInstruction[], indent: number): string[
           `${pad}    else:`,
           `${pad}        right = mid - 1`,
           `${pad}return -1`,
-        ]
+        ])
+        break
     }
-  })
+  }
+
+  return out
 }
 
 function categoryColour(name: string) {

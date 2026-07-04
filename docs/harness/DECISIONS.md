@@ -20,6 +20,11 @@ Decision: Visible features must work or clearly say partial or unsupported.
 Reason: The app teaches beginners, so fake support creates wrong learning signals.
 Consequence: Feature work must include an availability contract and stale-state checks.
 
+## 2026-07-04: Expanded F002 Scope to Include types.ts
+Decision: Added `src/dsa/types.ts` to F002's `allowed_files`.
+Reason: M2's real goal is to generalize teaching to any valid instruction program, not to pattern-match Level 4's exact shape. The clean way to correlate each execution frame with the code line it is executing is to attach the source instruction to the event. That requires an optional `source?: ProgramInstruction` field on `ExecutionEvent`, which lives in `types.ts` (a "high-risk, edit only when required" file). This qualifies as required.
+Consequence: The field is optional and backward-compatible; the single-block Linear Search recipe path ignores it and keeps its existing per-line mapping. Recorded here rather than silently editing a high-risk file outside the declared scope.
+
 ## 2026-07-04: Added a Strategic Roadmap Above FEATURE_LIST.json
 Decision: Created `docs/ROADMAP.md` as the milestone-level source of truth (M0–M6), with `docs/harness/FEATURE_LIST.json` features linked to a milestone ID.
 Reason: `FEATURE_LIST.json` tracks the single in-flight feature well, but had no layer above it showing sequencing, why that sequencing was chosen, or how to tell if the product is actually progressing toward its vision rather than just shipping isolated features.

@@ -28,6 +28,12 @@ export interface ExecutionEvent {
   value?: number | string | null
   match?: boolean
   cost?: number
+  // The program instruction this frame is executing, when it maps to one.
+  // Lets the teaching layer correlate a frame with the exact generated code
+  // line without re-deriving the interpreter's position. Undefined for
+  // synthetic frames (program start/finish) and for the single-block search
+  // recipes, which use their own fixed line mapping.
+  source?: ProgramInstruction
 }
 
 export interface RunState {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { getLearningSupport, getTeachingStep } from './learningSupport'
 import { executeProgram } from './engine'
-import { instructionsToPython } from './blockly'
+import { buildProgramCode, instructionsToPython } from './blockly'
 import { levels } from './levels'
 import type { ProgramInstruction } from './types'
 
@@ -25,7 +25,7 @@ describe('getLearningSupport', () => {
     expect(support.explanation).toBe('supported')
   })
 
-  it('marks the Level 4 block-built starter as partial', () => {
+  it('fully supports the canonical Level 4 block-built linear search', () => {
     const program: ProgramInstruction[] = [
       {
         type: 'scanArray',
@@ -39,9 +39,22 @@ describe('getLearningSupport', () => {
 
     const support = getLearningSupport(levelById(4), program)
 
+    expect(support.teaching).toBe('supported')
+    expect(support.codeHighlight).toBe('supported')
+    expect(support.explanation).toBe('supported')
+  })
+
+  it('keeps a non-canonical Level 4 arrangement honest (partial, no fake highlight)', () => {
+    // A loop that only reads a cell and never compares/returns is not a linear
+    // search we can narrate line-by-line, so it must stay partial.
+    const program: ProgramInstruction[] = [
+      { type: 'scanArray', body: [{ type: 'readIndex', index: 0 }] },
+    ]
+
+    const support = getLearningSupport(levelById(4), program)
+
     expect(support.teaching).toBe('partial')
     expect(support.codeHighlight).toBe('unsupported')
-    expect(support.explanation).toBe('fallback')
   })
 
   it('does not support the binary search recipe for Teaching yet', () => {
@@ -144,5 +157,81 @@ describe('getTeachingStep sync contract (single-block Linear Search)', () => {
     const step = getTeachingStep(undefined, linearSearch, support)
     expect(step.activeLines).toEqual([])
     expect(step.summary).toContain('No step is selected')
+  })
+})
+
+describe('getTeachingStep sync contract (block-built Level 4 linear search)', () => {
+  // Build the canonical program once so the SAME instruction objects flow into
+  // both the engine (which stamps them onto event.source) and the line map
+  // (keyed by object identity). This is what proves the shared engine works.
+  const buildProgram = () => {
+    const compare: ProgramInstruction = { type: 'compareIndex', index: 'i' }
+    const found: ProgramInstruction = { type: 'outputFoundCurrent' }
+    const ifBlock: ProgramInstruction = { type: 'ifCurrentEqualsTarget', body: [found] }
+    const scan: ProgramInstruction = { type: 'scanArray', body: [compare, ifBlock] }
+    const notFound: ProgramInstruction = { type: 'outputNotFound' }
+    return { program: [scan, notFound], scan, compare, ifBlock, found, notFound }
+  }
+
+  it('highlights each source instruction on its own generated line (found case)', () => {
+    const { program, scan, compare, ifBlock, found } = buildProgram()
+    const support = getLearningSupport(levelById(4), program)
+    const { lineOf } = buildProgramCode(program)
+    const frames = executeProgram(program, [3, 10, 14, 19], 14) // found at index 2
+
+    const seen = new Set<ProgramInstruction>()
+    for (const frame of frames) {
+      const step = getTeachingStep(frame, program, support)
+      // Teaching summary never diverges from the trace event message.
+      expect(step.summary).toBe(frame.event.message)
+
+      const src = frame.event.source
+      if (src) {
+        // Every sourced frame highlights exactly that instruction's line.
+        expect(step.activeLines).toEqual([lineOf.get(src)])
+        seen.add(src)
+      }
+    }
+    // The loop, the compare, the if, and the found-return were each taught.
+    expect(seen.has(scan)).toBe(true)
+    expect(seen.has(compare)).toBe(true)
+    expect(seen.has(ifBlock)).toBe(true)
+    expect(seen.has(found)).toBe(true)
+
+    const final = frames.at(-1)!
+    expect(final.state.found).toBe(true)
+    expect(getTeachingStep(final, program, support).activeLines).toEqual([lineOf.get(found)])
+  })
+
+  it('ends a missing search on the outputNotFound line (return -1)', () => {
+    const { program, notFound } = buildProgram()
+    const support = getLearningSupport(levelById(4), program)
+    const { lineOf } = buildProgramCode(program)
+    const frames = executeProgram(program, [3, 10, 14], 99)
+
+    const final = frames.at(-1)!
+    expect(final.state.found).toBe(false)
+    expect(final.event.source).toBe(notFound)
+    expect(getTeachingStep(final, program, support).activeLines).toEqual([lineOf.get(notFound)])
+  })
+
+  it('never leaves a supported block step without a highlight', () => {
+    const { program } = buildProgram()
+    const support = getLearningSupport(levelById(4), program)
+    const frames = executeProgram(program, [3, 10, 14, 19], 14)
+
+    for (const frame of frames) {
+      expect(getTeachingStep(frame, program, support).activeLines.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('the single-block recipe and the block build produce the same found index', () => {
+    // Same algorithm, two authoring paths, one engine -> same result.
+    const { program } = buildProgram()
+    const array = [3, 10, 14, 19, 26]
+    const recipe = executeProgram([{ type: 'linearSearch' }], array, 19)
+    const blocks = executeProgram(program, array, 19)
+    expect(recipe.at(-1)!.state.resultIndex).toBe(blocks.at(-1)!.state.resultIndex)
+    expect(blocks.at(-1)!.state.resultIndex).toBe(3)
   })
 })
