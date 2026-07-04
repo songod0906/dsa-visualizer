@@ -37,10 +37,10 @@ A milestone is not "done" because code merged. It's done when:
 | Done | M0 — Design reset | done (2026-07-04) |
 | Done | M1 — Harden Linear Search Teaching | done (2026-07-04) |
 | Done | M2 — Generalize the teaching engine (Level 4) | done (2026-07-04) |
-| Now | M3 — Binary Search on the shared engine | not started (unblocked by M2) |
-| Later | M4 — VCR-style trace scrubbing | not started |
-| Later | M5 — Widen the array/search surface | blocked by M2, M3 |
-| Later | M6 — LeetCode arc (problem → pattern → blocks → code → test) | blocked by M2 |
+| Done | M3 — Binary Search on the shared engine | done (2026-07-04) |
+| Now | M4 — VCR-style trace scrubbing | not started |
+| Next | M5 — Widen the array/search surface | unblocked (M2, M3 done) |
+| Later | M6 — LeetCode arc (problem → pattern → blocks → code → test) | blocked by M2 (done); ready when prioritized |
 
 ## Milestones
 
@@ -128,13 +128,16 @@ linear-search-shaped. If Binary Search needs its own bespoke engine, M2 wasn't d
 and remaining search interval correctly, with no stale text leaking from other
 algorithms or modes.
 **Linked feature:** F003.
-**Status:** not started (unblocked 2026-07-04 by M2). Note for implementation: the
-single-block `binarySearch` is a recipe like `linearSearch` — it is one instruction that
-expands to an 11-line block, so it most likely wants a fixed-line teaching mapping
-(`teachBinarySearchRecipe`, mirroring `teachLinearSearchRecipe`) rather than the
-source-instruction path. The engine already emits `left`/`mid`/`right` pointer moves and
-compares; the work is the frame→line+explanation mapping and flipping
-`getLearningSupport` to mark the binary recipe supported. Keep all F001/F002 tests green.
+**Status:** done (2026-07-04). As predicted, binary search rode the same rails as the
+linear recipe: added `teachBinarySearchRecipe` (fixed line mapping for the 11-line binary
+block — setup→2/3, mid→5, compare→6, found→7, narrowing→9/11, not-found→12) and flipped
+`getLearningSupport` to mark the single-block binary recipe supported. No engine rewrite —
+the interpreter already emitted left/mid/right moves and compares. Also fixed `ModePanel`
+to source the teaching intro from `support.reason` (it was hardcoded to a linear-search
+string, which would have mislabeled binary). Verified: 43/43 tests, build, lint,
+clean-state; browser QA of Level 7 (mid→5, compare→6 with correct discard-half explanation,
+found→7 in 2 comparisons), linear/block regressions intact. That M3 needed no engine change
+is the proof M2 actually generalized.
 
 ### M4 — VCR-style trace scrubbing
 **Goal:** We already store the full frame trace and render clickable past steps.
@@ -176,6 +179,14 @@ otherwise every new problem needs bespoke teaching wiring again.
 
 ## Changelog
 
+- **2026-07-04**: M3 (Binary Search on the shared engine / F003) completed. Binary Search
+  Teaching went from "not ready" to fully supported by mirroring the linear recipe
+  (`teachBinarySearchRecipe` fixed line mapping) plus a support-classification flip — no
+  engine rewrite, which confirms M2's generalization held. Fixed a latent bug where the
+  teaching intro was hardcoded to a linear-search string (would have mislabeled binary);
+  it now comes from `support.reason`. 43 tests (up from 38). All three search algorithms
+  (single-block linear, block-built linear, binary) now teach through the same engine. M4
+  (trace scrubbing) is the next Now.
 - **2026-07-04**: M2 (generalize the teaching engine / F002) completed — the load-bearing
   milestone. Level 4's block-built linear search now gets real per-line teaching through
   the SAME engine as the single-block recipe, via source-instruction correlation (frames

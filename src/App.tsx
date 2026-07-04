@@ -55,9 +55,6 @@ const allBlocks = [
   'dsa_binary_search',
 ]
 
-const linearSearchTeachingIntro =
-  'Linear search checks values left to right until it finds the target or reaches the end.'
-
 const explorationIntro =
   'Step through the visualization and trace.'
 
@@ -543,20 +540,18 @@ function ModePanel({
   support: LearningSupport
 }) {
   if (learningMode === 'teaching') {
-    const message =
-      support.teaching === 'supported'
-        ? null
-        : support.teaching === 'partial'
-          ? 'Line-by-line teaching is not wired for this block-built version yet.'
-          : 'Teaching is not ready for this level yet.'
+    // support.reason carries the algorithm-appropriate intro for every case
+    // (linear, binary, block-built, or the honest partial/unsupported message),
+    // so the intro line stays correct without hardcoding a linear-search string.
+    const supported = support.teaching === 'supported'
 
     return (
       <section className="mode-panel" aria-label="Teaching mode details">
         <div>
           <strong>Teaching</strong>
-          <span>{message ?? linearSearchTeachingIntro}</span>
+          <span>{support.reason}</span>
         </div>
-        {!message && (
+        {supported && (
           <div className="step-explanation">
             <span>{teachingStep.summary}</span>
             <p>{teachingStep.detail}</p>

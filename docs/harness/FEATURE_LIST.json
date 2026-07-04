@@ -157,7 +157,7 @@
       "priority": 4,
       "area": "binary-search-learning-flow",
       "title": "Clarify Binary Search support and feedback",
-      "state": "not_started",
+      "state": "passing",
       "behavior": "Binary Search should avoid fake Teaching support and, when implemented, explain the current comparison, decision, and remaining search interval without stale text from previous runs. This should be implemented on top of the F002 shared engine, not a second bespoke engine.",
       "scope": {
         "allowed_files": [
@@ -191,7 +191,13 @@
           "Switch to another algorithm and confirm no stale binary-search explanation appears"
         ]
       },
-      "evidence": [],
+      "evidence": [
+        "2026-07-04: npm test 43/43 pass (was 38; +6 binary tests, 1 flipped from unsupported->supported), build OK, lint clean, clean-state OK.",
+        "2026-07-04: Implemented teachBinarySearchRecipe (fixed line mapping for the 11-line binary block, mirroring teachLinearSearchRecipe): note->1, left/right setup->2/3, mid pick->5, compare->6, found->7, left narrow->9, right narrow->11, not found->12. isBinarySearchProgram gates getLearningSupport to mark the single-block binary recipe supported. Setup vs in-loop pointer moves distinguished by message shape ('Move ...' vs '... moves to ...'), guarded by a Python-layout test and a message-driven engine run.",
+        "2026-07-04: Fixed ModePanel in App.tsx to show support.reason as the teaching intro instead of a hardcoded linear-search string; otherwise Binary Search Teaching would have shown 'Linear search checks values...'. Also removed the now-stale hardcoded partial/unsupported strings (support.reason already carries them). Verified linear (Level 5) and block (Level 4) intros still correct.",
+        "2026-07-04: Tests - learningSupport.test pins the 12-line binary Python layout and runs the real engine to assert setup->2/3, mid->5, compare->6, left-narrow->9, right-narrow->11, found->7, missing->12, with summary===event.message and no empty highlight.",
+        "2026-07-04: Browser QA on Level 7 - Teaching intro shows the binary text; stepping shows mid-pick on line 5, compare on line 6 with 'middle is smaller, discard left half' explanation synced to 14<23, found on line 7 (return mid) in 2 comparisons. Binary window visualization (left/mid/right pointers, discarded cells) renders. Level 5 linear regression re-verified."
+      ],
       "depends_on": ["F002"]
     },
     {

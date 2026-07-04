@@ -57,12 +57,12 @@ describe('getLearningSupport', () => {
     expect(support.codeHighlight).toBe('unsupported')
   })
 
-  it('does not support the binary search recipe for Teaching yet', () => {
+  it('fully supports the single-block binary search recipe for Teaching', () => {
     const support = getLearningSupport(levelById(7), [{ type: 'binarySearch' }])
 
-    expect(support.teaching).toBe('unsupported')
-    expect(support.codeHighlight).toBe('unsupported')
-    expect(support.explanation).toBe('unsupported')
+    expect(support.teaching).toBe('supported')
+    expect(support.codeHighlight).toBe('supported')
+    expect(support.explanation).toBe('supported')
   })
 
   it('does not give unsupported programs code highlighting', () => {
@@ -233,5 +233,90 @@ describe('getTeachingStep sync contract (block-built Level 4 linear search)', ()
     const blocks = executeProgram(program, array, 19)
     expect(recipe.at(-1)!.state.resultIndex).toBe(blocks.at(-1)!.state.resultIndex)
     expect(blocks.at(-1)!.state.resultIndex).toBe(3)
+  })
+})
+
+describe('getTeachingStep sync contract (single-block Binary Search)', () => {
+  const binary: ProgramInstruction[] = [{ type: 'binarySearch' }]
+  const binaryLines = instructionsToPython(binary).split('\n')
+  const bline = (n: number) => binaryLines[n - 1]
+
+  // Pin the generated Python so a future blockly.ts change that shifts a binary
+  // line breaks these tests instead of silently desyncing the highlight.
+  it('emits the twelve-line binary body the mapping targets', () => {
+    expect(bline(1)).toContain('def search')
+    expect(bline(2).trim()).toBe('left = 0')
+    expect(bline(3).trim()).toBe('right = len(array) - 1')
+    expect(bline(4).trim()).toBe('while left <= right:')
+    expect(bline(5)).toContain('mid = (left + right) // 2')
+    expect(bline(6)).toContain('if array[mid] == target')
+    expect(bline(7).trim()).toBe('return mid')
+    expect(bline(9).trim()).toBe('left = mid + 1')
+    expect(bline(11).trim()).toBe('right = mid - 1')
+    expect(bline(12).trim()).toBe('return -1')
+  })
+
+  it('marks the binary recipe supported for Teaching', () => {
+    const support = getLearningSupport(levelById(7), binary)
+    expect(support.teaching).toBe('supported')
+    expect(support.codeHighlight).toBe('supported')
+    expect(support.reason.toLowerCase()).toContain('binary')
+  })
+
+  const runBinary = (array: number[], target: number) => {
+    const frames = executeProgram(binary, array, target)
+    const support = getLearningSupport(levelById(7), binary)
+    return frames.map((frame) => ({ frame, step: getTeachingStep(frame, binary, support) }))
+  }
+
+  it('maps setup, mid, compare, narrowing, and found to the right lines', () => {
+    const steps = runBinary([2, 5, 9, 14, 18, 23, 31, 40], 23) // found at index 5
+
+    for (const { frame, step } of steps) {
+      expect(step.summary).toBe(frame.event.message)
+      expect(step.activeLines.length).toBeGreaterThan(0)
+    }
+
+    const leftSetup = steps.find(
+      (s) => s.frame.event.pointer === 'left' && s.frame.event.message.startsWith('Move'),
+    )
+    expect(leftSetup?.step.activeLines).toEqual([2])
+
+    const rightSetup = steps.find(
+      (s) => s.frame.event.pointer === 'right' && s.frame.event.message.startsWith('Move'),
+    )
+    expect(rightSetup?.step.activeLines).toEqual([3])
+
+    const midMove = steps.find((s) => s.frame.event.pointer === 'mid')
+    expect(midMove?.step.activeLines).toEqual([5])
+
+    const compare = steps.find((s) => s.frame.event.kind === 'compare')
+    expect(compare?.step.activeLines).toEqual([6])
+
+    // Target 23 is bigger than the first middle (14), so left narrows -> line 9.
+    const leftNarrow = steps.find(
+      (s) => s.frame.event.pointer === 'left' && s.frame.event.message.includes('moves to'),
+    )
+    expect(leftNarrow?.step.activeLines).toEqual([9])
+
+    const final = steps.at(-1)!
+    expect(final.frame.state.found).toBe(true)
+    expect(final.step.activeLines).toEqual([7])
+  })
+
+  it('maps a right-narrowing step to line 11', () => {
+    // Target 5 is smaller than the first middle (14), so right narrows.
+    const steps = runBinary([2, 5, 9, 14, 18, 23, 31, 40], 5)
+    const rightNarrow = steps.find(
+      (s) => s.frame.event.pointer === 'right' && s.frame.event.message.includes('moves to'),
+    )
+    expect(rightNarrow?.step.activeLines).toEqual([11])
+  })
+
+  it('ends a missing binary search on return -1 (line 12)', () => {
+    const steps = runBinary([1, 3, 5, 7, 9], 4)
+    const final = steps.at(-1)!
+    expect(final.frame.state.found).toBe(false)
+    expect(final.step.activeLines).toEqual([12])
   })
 })

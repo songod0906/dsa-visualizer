@@ -18,6 +18,10 @@ export function isLinearSearchProgram(instructions: ProgramInstruction[]) {
   return instructions.length === 1 && instructions[0]?.type === 'linearSearch'
 }
 
+export function isBinarySearchProgram(instructions: ProgramInstruction[]) {
+  return instructions.length === 1 && instructions[0]?.type === 'binarySearch'
+}
+
 // Recognizes the block-built linear search shape the teaching engine fully
 // understands: a single scan loop whose body compares each cell and returns the
 // index when an `if current == target` matches, optionally followed by a
@@ -48,6 +52,15 @@ export function getLearningSupport(level: Level | null, instructions: ProgramIns
       codeHighlight: 'supported',
       explanation: 'supported',
       reason: 'Linear search checks values left to right until it finds the target or reaches the end.',
+    }
+  }
+
+  if (isBinarySearchProgram(instructions)) {
+    return {
+      teaching: 'supported',
+      codeHighlight: 'supported',
+      explanation: 'supported',
+      reason: 'Binary search checks the middle of the current window and discards the half that cannot contain the target.',
     }
   }
 
@@ -109,7 +122,90 @@ export function getTeachingStep(
     return teachLinearSearchRecipe(frame)
   }
 
+  if (isBinarySearchProgram(instructions)) {
+    return teachBinarySearchRecipe(frame)
+  }
+
   return teachBlockProgram(frame, instructions)
+}
+
+// Fixed line mapping for the single `binarySearch` block:
+//   1 def / 2 left=0 / 3 right=len-1 / 4 while / 5 mid / 6 if ==target /
+//   7 return mid / 8 if <target / 9 left=mid+1 / 10 else / 11 right=mid-1 / 12 return -1
+// The initial left/right setup moves use the default "Move ... to index N."
+// message; the in-loop narrowing moves use "... moves to N.", which is how we
+// tell the setup lines (2/3) apart from the discard lines (9/11).
+function teachBinarySearchRecipe(frame: ExecutionFrame): TeachingStep {
+  const summary = frame.event.message
+
+  switch (frame.event.kind) {
+    case 'note':
+      return {
+        activeLines: [1],
+        summary,
+        detail: 'Binary search starts by looking at the whole array, from the left end to the right end.',
+      }
+    case 'movePointer': {
+      const isSetup = frame.event.message.startsWith('Move ')
+      if (frame.event.pointer === 'mid') {
+        return {
+          activeLines: [5],
+          summary,
+          detail: 'The middle index sits halfway between left and right. Binary search always checks the middle next.',
+        }
+      }
+      if (frame.event.pointer === 'left') {
+        return isSetup
+          ? { activeLines: [2], summary, detail: 'Left marks the low end of the window still being searched.' }
+          : { activeLines: [9], summary, detail: 'The middle value was too small, so the target must be to the right. Move left past the middle to discard the left half.' }
+      }
+      if (frame.event.pointer === 'right') {
+        return isSetup
+          ? { activeLines: [3], summary, detail: 'Right marks the high end of the window still being searched.' }
+          : { activeLines: [11], summary, detail: 'The middle value was too big, so the target must be to the left. Move right below the middle to discard the right half.' }
+      }
+      break
+    }
+    case 'compare': {
+      if (frame.event.match) {
+        return {
+          activeLines: [6],
+          summary,
+          detail: 'The middle value equals the target, so the search can return this index next.',
+        }
+      }
+      const midValue = typeof frame.event.value === 'number' ? frame.event.value : null
+      const tooSmall = midValue !== null && midValue < frame.state.target
+      return {
+        activeLines: [6],
+        summary,
+        detail: tooSmall
+          ? 'The middle value is smaller than the target, so the whole left half can be discarded.'
+          : 'The middle value is larger than the target, so the whole right half can be discarded.',
+      }
+    }
+    case 'setResult':
+      if (frame.state.found) {
+        return {
+          activeLines: [7],
+          summary,
+          detail: 'Returning the middle index finishes the search the moment the target is found.',
+        }
+      }
+      return {
+        activeLines: [12],
+        summary,
+        detail: 'Left has passed right, so the window is empty and the target is not in the array.',
+      }
+    default:
+      break
+  }
+
+  return {
+    activeLines: [1],
+    summary,
+    detail: 'This step updates the search window shown in the visualization.',
+  }
 }
 
 // Fixed line mapping for the single `linearSearch` block:
