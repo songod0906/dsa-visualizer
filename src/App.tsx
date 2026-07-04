@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import * as Blockly from 'blockly/core'
-import { BookOpen, Check, Pause, Play, RotateCcw, Settings2, StepForward } from 'lucide-react'
+import { BookOpen, Check, Pause, Play, RotateCcw, Settings2, SkipBack, SkipForward, StepBack, StepForward } from 'lucide-react'
 import './App.css'
 import {
   instructionsToPython,
@@ -118,7 +118,11 @@ function App() {
   )
   const pythonCode = useMemo(() => instructionsToPython(instructions), [instructions])
   const codeLines = useMemo(() => toCodeLines(pythonCode), [pythonCode])
-  const currentFrame = frames[Math.min(frameIndex, Math.max(frames.length - 1, 0))]
+  const lastFrameIndex = Math.max(frames.length - 1, 0)
+  const clampedIndex = Math.min(frameIndex, lastFrameIndex)
+  const atStart = frames.length === 0 || clampedIndex <= 0
+  const atEnd = frames.length === 0 || clampedIndex >= lastFrameIndex
+  const currentFrame = frames[clampedIndex]
   const currentState = currentFrame?.state ?? createInitialState(activeArray, activeTarget)
   const learningSupport = useMemo(
     () => getLearningSupport(mode === 'puzzle' ? activeLevel : null, instructions),
@@ -206,6 +210,21 @@ function App() {
   const stepOnce = () => {
     setRunning(false)
     setFrameIndex((index) => Math.min(index + 1, Math.max(frames.length - 1, 0)))
+  }
+
+  const stepBack = () => {
+    setRunning(false)
+    setFrameIndex((index) => Math.max(index - 1, 0))
+  }
+
+  const jumpToStart = () => {
+    setRunning(false)
+    setFrameIndex(0)
+  }
+
+  const jumpToEnd = () => {
+    setRunning(false)
+    setFrameIndex(Math.max(frames.length - 1, 0))
   }
 
   const runProgram = () => {
@@ -413,9 +432,14 @@ function App() {
             />
           </div>
           <div className="controls" aria-label="Execution controls">
+            <div className="transport" role="group" aria-label="Trace transport">
+              <button className="transport-btn" onClick={jumpToStart} disabled={atStart} aria-label="Jump to first step" title="First step"><SkipBack size={16} /></button>
+              <button className="transport-btn" onClick={stepBack} disabled={atStart} aria-label="Step back one frame" title="Step back"><StepBack size={16} /></button>
+              <button className="transport-btn" onClick={stepOnce} disabled={atEnd} aria-label="Step forward one frame" title="Step forward"><StepForward size={16} /></button>
+              <button className="transport-btn" onClick={jumpToEnd} disabled={atEnd} aria-label="Jump to last step" title="Last step"><SkipForward size={16} /></button>
+            </div>
             <button onClick={runProgram}><Play size={16} /> Run</button>
             <button onClick={() => setRunning(false)}><Pause size={16} /> Pause</button>
-            <button onClick={stepOnce}><StepForward size={16} /> Step</button>
             <button onClick={resetRun}><RotateCcw size={16} /> Reset</button>
             <label>
               Speed

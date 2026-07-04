@@ -206,7 +206,7 @@
       "priority": 5,
       "area": "trace-scrubbing",
       "title": "Add VCR-style trace transport (step-back, jump-to-start, jump-to-end)",
-      "state": "not_started",
+      "state": "passing",
       "behavior": "The app already stores the full frame trace and renders clickable past steps. Add transport controls so a learner can move to any prior step without re-running the program, matching VisuAlgo-style scrubbing.",
       "scope": {
         "allowed_files": [
@@ -237,7 +237,11 @@
           "Confirm existing Run/Pause/Step/Reset behavior is unchanged"
         ]
       },
-      "evidence": []
+      "evidence": [
+        "2026-07-04: npm test 43/43 pass (no test changes; M4 is UI on existing data), build OK, lint clean, clean-state OK.",
+        "2026-07-04: Added a transport cluster to the controls row (App.tsx/App.css): jump-to-first (SkipBack), step-back (StepBack), step-forward (existing stepOnce, now StepForward icon), jump-to-last (SkipForward). New handlers stepBack/jumpToStart/jumpToEnd set frameIndex; backward controls disabled at frame 0, forward controls disabled at the last frame (derived atStart/atEnd). No engine/teaching changes - scrubbing works because every surface already derives from frameIndex.",
+        "2026-07-04: Browser QA on Level 7 - at frame 0 the two backward controls are disabled; jump-to-last -> step 9/9 line 7 with forward controls disabled; step-back -> step 8/9 with line 6 + explanation + trace all re-synced to the earlier frame; jump-to-first -> step 1/9 with backward disabled again. No console errors. Transport renders as a grouped dark cluster before Run/Pause/Reset."
+      ]
     }
   ]
 }

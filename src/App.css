@@ -560,6 +560,35 @@ button.active,
   color: #06100a;
 }
 
+.transport {
+  align-items: center;
+  background: #0f1720;
+  border: 1px solid #263241;
+  border-radius: 8px;
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.controls .transport-btn {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  min-height: 30px;
+  padding: 6px 8px;
+}
+
+.controls .transport-btn:hover:not(:disabled) {
+  background: #1b2a36;
+  border-color: transparent;
+}
+
+.controls .transport-btn:disabled {
+  color: #46586a;
+  cursor: default;
+}
+
 .controls label,
 .sandbox-controls label {
   align-items: center;

@@ -38,8 +38,8 @@ A milestone is not "done" because code merged. It's done when:
 | Done | M1 — Harden Linear Search Teaching | done (2026-07-04) |
 | Done | M2 — Generalize the teaching engine (Level 4) | done (2026-07-04) |
 | Done | M3 — Binary Search on the shared engine | done (2026-07-04) |
-| Now | M4 — VCR-style trace scrubbing | not started |
-| Next | M5 — Widen the array/search surface | unblocked (M2, M3 done) |
+| Done | M4 — VCR-style trace scrubbing | done (2026-07-04) |
+| Now | M5 — Widen the array/search surface | unblocked (M2, M3 done) |
 | Later | M6 — LeetCode arc (problem → pattern → blocks → code → test) | blocked by M2 (done); ready when prioritized |
 
 ## Milestones
@@ -148,7 +148,12 @@ observed directly by comparing our trace panel to VisuAlgo's transport controls 
 2026-07-04.
 **Exit criteria:** Learner can jump to any prior step from the trace panel or
 transport controls without re-running the program.
-**Status:** not started.
+**Status:** done (2026-07-04). Added a transport cluster (jump-to-first, step-back,
+step-forward, jump-to-last) to the controls row, with boundary-aware disabling.
+Backward scrubbing re-syncs code highlight, explanation, visualization, and trace
+because they all derive from `frameIndex` — no engine or teaching change needed, which
+is exactly why this was cheap. Verified: 43/43 tests, build, lint, clean-state; browser
+QA of all four transport actions and both boundary states on Level 7.
 
 ### M5 — Widen the array/search surface
 **Goal:** Still inside "arrays and search," round out adjacent patterns (e.g.
@@ -179,6 +184,12 @@ otherwise every new problem needs bespoke teaching wiring again.
 
 ## Changelog
 
+- **2026-07-04**: M4 (VCR-style trace scrubbing / F004) completed. Added a jump-to-first /
+  step-back / step-forward / jump-to-last transport cluster to the runtime controls, with
+  boundary-aware disabling. Pure UI on existing data — backward scrubbing re-syncs every
+  teaching surface for free because they all derive from `frameIndex`. 43 tests (unchanged;
+  UI-only). All core-loop + enhancement milestones through M4 are done; remaining work
+  (M5 widen surface, M6 LeetCode arc) is expansion, not core-loop.
 - **2026-07-04**: M3 (Binary Search on the shared engine / F003) completed. Binary Search
   Teaching went from "not ready" to fully supported by mirroring the linear recipe
   (`teachBinarySearchRecipe` fixed line mapping) plus a support-classification flip — no

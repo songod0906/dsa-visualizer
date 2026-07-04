@@ -1,54 +1,55 @@
 # Session Handoff
 
 ## Last Session Summary
-Executed M3 / F003: turned Binary Search Teaching from "not ready" into fully supported,
-per-line synchronized teaching. Crucially this needed NO engine rewrite — binary rode the
-same rails as the linear recipe, which is the practical proof that M2's generalization held.
-With M3 done, all three search flows (single-block linear, block-built linear, binary) teach
-through one engine.
+Executed M4 / F004: added VCR-style trace scrubbing (jump-to-first, step-back, step-forward,
+jump-to-last) to the runtime controls. Pure UI on existing data — no engine or teaching change,
+because every teaching surface already derives from `frameIndex`, so moving the playhead
+backward re-syncs the code highlight, explanation, visualization, and trace for free. This
+completes the core arrays/search loop plus its most-requested control gap.
 
 ## Active Feature
-None. F000 (M0), F001 (M1), F002 (M2), F003 (M3) are done and marked `passing`. Next is
-F004 (M4) — or M5 if adding algorithms is preferred over control polish.
+None. F000 (M0) through F004 (M4) are done and marked `passing`. Remaining milestones (M5, M6)
+are expansion, not core-loop — confirm direction with the owner before starting.
 
-## How M3 works
-- `learningSupport.ts` `isBinarySearchProgram` + a `getLearningSupport` branch mark the
-  single-block `binarySearch` recipe as fully supported.
-- `teachBinarySearchRecipe` is a fixed line mapping for the 11-line binary block (mirrors
-  `teachLinearSearchRecipe`): note→1, left/right setup→2/3, mid pick→5, compare→6, found→7,
-  left narrow→9, right narrow→11, not found→12. Setup vs in-loop pointer moves are told
-  apart by message shape ("Move …" vs "… moves to …"), guarded by tests.
-- `App.tsx` `ModePanel` now shows `support.reason` as the teaching intro instead of a
-  hardcoded linear-search string (that bug would have mislabeled binary as "Linear search…").
-  The stale hardcoded partial/unsupported strings were removed too (support.reason covers them).
+## How M4 works
+- `App.tsx`: new handlers `stepBack` / `jumpToStart` / `jumpToEnd` set `frameIndex` (all also
+  `setRunning(false)`). Derived `atStart` / `atEnd` (from a clamped index) disable the backward
+  controls at frame 0 and the forward controls at the last frame.
+- The controls row now leads with a `.transport` cluster of four icon buttons (SkipBack,
+  StepBack, StepForward, SkipForward from lucide-react), then Run / Pause / Reset / Speed / Check.
+  The old text "Step" button became the StepForward icon in the cluster.
+- `App.css`: `.transport` + `.controls .transport-btn` styles (dark grouped cluster, disabled dimming).
 
 ## Changed Files In Last Session
-- `src/dsa/learningSupport.ts` (isBinarySearchProgram, support branch, teachBinarySearchRecipe, dispatch)
-- `src/dsa/learningSupport.test.ts` (binary sync-contract tests; flipped the old "binary unsupported" test)
-- `src/App.tsx` (ModePanel intro from support.reason; removed unused linearSearchTeachingIntro)
+- `src/App.tsx` (transport handlers, atStart/atEnd, icon imports, controls JSX)
+- `src/App.css` (.transport / .transport-btn)
 - `docs/ROADMAP.md`, `docs/harness/FEATURE_LIST.json`, `docs/harness/PROGRESS.md`,
   `docs/harness/SESSION_HANDOFF.md` (tracking)
-- engine.ts / blockly.ts / types.ts: NOT changed this milestone (M3 reused the M2 engine as-is).
+- No engine/teaching/test changes — M4 is UI-only on existing data.
 
 ## Verification In Last Session
-- `npm test`: 3 files passed, 43 tests passed (was 38; +6 binary tests, 1 flipped).
-- `npm run build`: passed with existing Vite chunk-size warning only.
-- `npm run lint`: passed.
-- `bash scripts/harness/clean-state.sh`: passed.
-- Browser QA (Level 7): Teaching intro shows the binary text; stepping highlights mid→line 5,
-  compare→line 6 with "middle smaller, discard left half" synced to 14<23, found→line 7
-  (return mid) in 2 comparisons; left/mid/right pointers and discarded-cell window render.
-  Level 5 linear intro regression re-verified.
+- `npm test`: 43 tests passed (unchanged; M4 is UI-only).
+- `npm run build`, `npm run lint`, `bash scripts/harness/clean-state.sh`: all passed.
+- Browser QA (Level 7): frame 0 -> backward controls disabled; jump-to-last -> step 9/9, line 7,
+  forward disabled; step-back -> step 8/9 with line 6 + explanation + trace re-synced;
+  jump-to-first -> step 1/9, backward disabled again. No console errors.
 
-## Notes For The Next Session
-- M4 (F004, trace scrubbing): the full frame trace is already stored in `frames` and the
-  trace rows already set `frameIndex` on click (see `App.tsx`), so transport buttons
-  (step-back / jump-to-start / jump-to-end) are UI on existing data. `stepOnce` already exists;
-  add the inverse and the two jumps, wire into the `.controls` row. Mostly App.tsx/App.css.
-- M5 (widen array/search surface) is also unblocked now that the engine generalizes.
-- Reminder: the F001 stale-switch guard briefly sets `instructions` to [] on level change; a
-  scripted rapid-click test can observe that transient empty program, but it settles correctly
-  on normal navigation. Do not remove the guard (it prevents a fake-support flash).
+## State Of The Product
+The MVP bar from PRODUCT_VISION.md ("arrays and search excellent") is met: all three search
+flows (single-block linear, block-built linear, binary) teach with real, tested,
+frame-synchronized code highlighting + explanations, on a flat VisuAlgo-clean UI, with full
+trace scrubbing. 43 tests lock the teaching-sync contracts.
+
+## Notes For The Next Session (expansion, needs owner direction)
+- M5 (widen array/search surface): pick ONE adjacent pattern (e.g. insert/delete with shifting,
+  or a two-pointer technique). Each needs: new Blockly block(s) in `blockly.ts` + a
+  `ProgramInstruction` type in `types.ts` + an engine case in `engine.ts` + a teaching mapping in
+  `learningSupport.ts` + honest `getLearningSupport` classification + tests. Follow the M2/M3
+  pattern (recipe vs block, source-instruction line mapping). Keep all existing tests green.
+- M6 (LeetCode arc): largest scope; do not start without explicit prioritization.
+- Reminder: the F001 stale-switch guard sets `instructions` to [] briefly on level change; a
+  scripted rapid-click test can observe the transient empty program, but it settles correctly on
+  normal navigation. Do not remove the guard (prevents a fake-support flash).
 
 ## Open Risks
 - Future sessions must check `git status --short` before editing.
@@ -56,5 +57,6 @@ F004 (M4) — or M5 if adding algorithms is preferred over control polish.
 - The ~896kB JS bundle triggers a Vite chunk-size warning. Pre-existing, out of scope; revisit only if it becomes a real load-time problem.
 
 ## Next Suggested Action
-Start M4 / F004 (trace scrubbing) or M5 (widen surface). Read `docs/ROADMAP.md`, move only
-one feature to `active`, and keep all F001–F003 teaching-sync tests green.
+Core loop is complete. Confirm with the owner whether to pursue M5 (widen surface) or M6
+(LeetCode arc), then move only that one feature to `active`. Keep all F001–F003 teaching-sync
+tests green through any future engine change.
