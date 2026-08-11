@@ -7,7 +7,10 @@ generated code, the memory state, the line highlight, and a plain-English explan
 in sync. It's the rigor of [VisuAlgo](https://visualgo.net) fused with the hands-on feel of Scratch,
 aimed at the moment between *"I sort of get it"* and *"I can actually build it."*
 
+### ▶︎ [**Try the live demo →**](https://dsa-visualizer-woad-ten.vercel.app)
+
 <p>
+  <a href="https://dsa-visualizer-woad-ten.vercel.app"><img alt="Live Demo" src="https://img.shields.io/badge/live%20demo-online-22C55E?logo=vercel&logoColor=white"></a>
   <img alt="React" src="https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white">
   <img alt="Vite" src="https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white">
